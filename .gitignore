@@ -1,0 +1,44 @@
+# Byte-code files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg
+
+# Distributions and packaging
+.eggs/
+*.egg-info/
+dist/
+build/
+wheels/
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+bin/
+lib/
+include/
+share/
+
+# Editors and IDEs
+.idea/  # For PyCharm/IntelliJ
+.vscode/ # For VS Code
+*.swp
+*~
+.DS_Store # macOS files
+Thumbs.db # Windows files
+
+# Runtime files
+*.log
+*.sqlite3
+*.db
+local_settings.py # Consider ignoring sensitive local settings
+
+# Dependency management lock files (optional, often committed)
+# Pipfile.lock
+# poetry.lock
+# requirements.txt (if dynamically generated)

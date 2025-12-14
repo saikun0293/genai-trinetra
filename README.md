@@ -1,5 +1,13 @@
 # genai-hackathon
 
+To use ADK command you need to activate virtual environment
+```
+cd ~/genai-hackathon
+uv sync
+source .venv/bin/activate
+adk web
+```
+
 A base ReAct agent built with Google's Agent Development Kit (ADK)
 Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.28.2`
 

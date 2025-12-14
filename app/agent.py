@@ -18,6 +18,7 @@ from zoneinfo import ZoneInfo
 
 from google.adk.agents import Agent
 from google.adk.apps.app import App
+from .sub_agents.ingestion_agent import ingestion_agent
 
 import os
 import google.auth
@@ -66,6 +67,7 @@ root_agent = Agent(
     model="gemini-3-pro-preview",
     instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
     tools=[get_weather, get_current_time],
+    sub_agents=[ingestion_agent]
 )
 
 app = App(root_agent=root_agent, name="app")

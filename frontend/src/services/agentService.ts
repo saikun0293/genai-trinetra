@@ -13,6 +13,21 @@ interface AgentResponse {
   type?: string
 }
 
+interface AnalysisData {
+  transaction_id: string
+  payee_analysis: string | null
+  payer_analysis: string | null
+  geopolitical_analysis: string | null
+  transaction_analysis: string | null
+  critic_analysis: string | null
+}
+
+interface AnalysisResponse {
+  success: boolean
+  transaction_id: string
+  analysis: AnalysisData
+}
+
 class AgentService {
   private baseUrl = "" // Empty string uses current origin with Vite proxy
   private currentSessionId: string | null = null
@@ -115,6 +130,31 @@ class AgentService {
     }
 
     return fullText
+  }
+
+  async getTransactionAnalysis(
+    transactionId: string
+  ): Promise<AnalysisData | null> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/api/analysis/${transactionId}`
+      )
+
+      if (response.status === 404) {
+        // No analysis found for this transaction
+        return null
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch analysis: ${response.statusText}`)
+      }
+
+      const data: AnalysisResponse = await response.json()
+      return data.analysis
+    } catch (error) {
+      console.error(`Error fetching analysis for ${transactionId}:`, error)
+      return null
+    }
   }
 
   resetSession() {

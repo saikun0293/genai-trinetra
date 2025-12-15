@@ -38,7 +38,7 @@ payee_agent = LlmAgent(
         analyze_temporal_patterns,
         upsert_state,
     ],
-    include_contents='none'  # Don't respond to user directly, only write to state
+    include_contents='none',  # Don't respond to user directly, only write to state
     after_agent_callback=create_analysis_callback("payee_analysis", "payee_agent")
 )
 

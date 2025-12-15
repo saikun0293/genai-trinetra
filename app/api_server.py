@@ -22,6 +22,9 @@ from google.adk.cli.fast_api import get_fast_api_app
 from google.cloud import bigquery
 from pydantic import BaseModel
 
+# Import BigQuery service
+from app.bigquery_service import get_transaction_analysis
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -215,6 +218,44 @@ async def update_transaction_status(request: dict[str, Any]) -> dict[str, Any]:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to update transaction status: {str(e)}"
+        )
+
+
+@app.get("/analysis/{transaction_id}")
+async def get_analysis(transaction_id: str) -> dict[str, Any]:
+    """
+    Get compliance analysis data for a specific transaction from BigQuery.
+    
+    Args:
+        transaction_id: The transaction ID to fetch analysis for
+    
+    Returns:
+        Analysis data including payee, payer, geopolitical, transaction, and critic analysis
+    """
+    try:
+        logger.info(f"Fetching analysis for transaction: {transaction_id}")
+        
+        analysis_data = get_transaction_analysis(transaction_id)
+        
+        if not analysis_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No analysis found for transaction: {transaction_id}"
+            )
+        
+        return {
+            "success": True,
+            "transaction_id": transaction_id,
+            "analysis": analysis_data
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching analysis for transaction {transaction_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch analysis: {str(e)}"
         )
 
 

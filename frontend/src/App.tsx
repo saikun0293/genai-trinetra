@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from "react"
 import { RefreshCw, BarChart3, X, Filter, FilterX } from "lucide-react"
 import { SideNav } from "@/components/SideNav"
 import { VerifyView } from "@/components/VerifyView"
+import { agentService } from "@/services/agentService"
+import ReactMarkdown from "react-markdown"
 
 interface Transaction {
   transaction_id: string
@@ -32,6 +34,15 @@ interface Filters {
   maxAmount: string
 }
 
+interface AnalysisData {
+  transaction_id: string
+  payee_analysis: string | null
+  payer_analysis: string | null
+  geopolitical_analysis: string | null
+  transaction_analysis: string | null
+  critic_analysis: string | null
+}
+
 type TabType = "conclusion" | "payee" | "payer" | "geopolitics" | "transactions"
 
 export default function App() {
@@ -47,6 +58,8 @@ export default function App() {
     useState<Transaction | null>(null)
   const [activeTab, setActiveTab] = useState<TabType>("conclusion")
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null)
+  const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState<Filters>({
     search: "",
@@ -61,6 +74,29 @@ export default function App() {
   useEffect(() => {
     fetchTransactions()
   }, [])
+
+  useEffect(() => {
+    const fetchAnalysis = async () => {
+      if (selectedTransaction) {
+        setIsLoadingAnalysis(true)
+        try {
+          const analysis = await agentService.getTransactionAnalysis(
+            selectedTransaction.transaction_id
+          )
+          setAnalysisData(analysis)
+        } catch (error) {
+          console.error("Error fetching analysis:", error)
+          setAnalysisData(null)
+        } finally {
+          setIsLoadingAnalysis(false)
+        }
+      } else {
+        setAnalysisData(null)
+      }
+    }
+
+    fetchAnalysis()
+  }, [selectedTransaction])
 
   const fetchTransactions = async () => {
     try {
@@ -344,6 +380,19 @@ export default function App() {
       selectedTransaction.approval_status.toLowerCase() === "in review" ||
       selectedTransaction.approval_status.toLowerCase() === "pending"
 
+    if (isLoadingAnalysis) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center space-y-4">
+            <div className="w-12 h-12 border-4 border-neutral-600 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
+            <p className="text-sm" style={{ color: "#B8BCC1" }}>
+              Loading analysis...
+            </p>
+          </div>
+        </div>
+      )
+    }
+
     switch (activeTab) {
       case "conclusion":
         return (
@@ -351,11 +400,21 @@ export default function App() {
             <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
               Analysis Conclusion
             </h3>
-            <p style={{ color: "#B8BCC1" }}>
-              This is a placeholder for the AI-generated conclusion about the
-              transaction analysis. The system has reviewed payment details,
-              compliance requirements, and risk factors.
-            </p>
+            {analysisData?.critic_analysis ? (
+              <div
+                className="prose prose-invert max-w-none"
+                style={{ color: "#B8BCC1" }}
+              >
+                <ReactMarkdown className="text-sm">
+                  {analysisData.critic_analysis}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <p style={{ color: "#B8BCC1" }}>
+                No analysis available for this transaction. Please run the
+                compliance analysis first.
+              </p>
+            )}
             <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
               <p className="text-sm" style={{ color: "#B8BCC1" }}>
                 <strong>Transaction ID:</strong>{" "}
@@ -402,17 +461,24 @@ export default function App() {
             <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
               Payee Information
             </h3>
-            <p style={{ color: "#B8BCC1" }}>
-              Detailed analysis of the payee entity, including historical
-              transaction patterns, risk assessment, and compliance status.
-            </p>
+            {analysisData?.payee_analysis ? (
+              <div
+                className="prose prose-invert max-w-none"
+                style={{ color: "#B8BCC1" }}
+              >
+                <ReactMarkdown className="text-sm">
+                  {analysisData.payee_analysis}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <p style={{ color: "#B8BCC1" }}>
+                No payee analysis available for this transaction.
+              </p>
+            )}
             <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
               <p className="text-sm" style={{ color: "#B8BCC1" }}>
                 <strong>Country:</strong>{" "}
                 {selectedTransaction.payee_country || "N/A"}
-              </p>
-              <p className="text-sm mt-2" style={{ color: "#B8BCC1" }}>
-                Sample payee data and risk indicators would appear here.
               </p>
             </div>
           </div>
@@ -423,17 +489,24 @@ export default function App() {
             <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
               Payer (Vendor) Information
             </h3>
-            <p style={{ color: "#B8BCC1" }}>
-              Analysis of the vendor/payer entity including verification status,
-              transaction history, and reputation score.
-            </p>
+            {analysisData?.payer_analysis ? (
+              <div
+                className="prose prose-invert max-w-none"
+                style={{ color: "#B8BCC1" }}
+              >
+                <ReactMarkdown className="text-sm">
+                  {analysisData.payer_analysis}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <p style={{ color: "#B8BCC1" }}>
+                No payer analysis available for this transaction.
+              </p>
+            )}
             <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
               <p className="text-sm" style={{ color: "#B8BCC1" }}>
                 <strong>Country:</strong>{" "}
                 {selectedTransaction.vendor_country || "N/A"}
-              </p>
-              <p className="text-sm mt-2" style={{ color: "#B8BCC1" }}>
-                Sample vendor data and compliance information would appear here.
               </p>
             </div>
           </div>
@@ -444,18 +517,24 @@ export default function App() {
             <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
               Geopolitical Analysis
             </h3>
-            <p style={{ color: "#B8BCC1" }}>
-              Assessment of geopolitical risks, sanctions screening, and
-              regional compliance requirements affecting this transaction.
-            </p>
+            {analysisData?.geopolitical_analysis ? (
+              <div
+                className="prose prose-invert max-w-none"
+                style={{ color: "#B8BCC1" }}
+              >
+                <ReactMarkdown className="text-sm">
+                  {analysisData.geopolitical_analysis}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <p style={{ color: "#B8BCC1" }}>
+                No geopolitical analysis available for this transaction.
+              </p>
+            )}
             <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
               <p className="text-sm" style={{ color: "#B8BCC1" }}>
                 <strong>Route:</strong> {selectedTransaction.payee_country} →{" "}
                 {selectedTransaction.vendor_country}
-              </p>
-              <p className="text-sm mt-2" style={{ color: "#B8BCC1" }}>
-                Geopolitical risk assessment and sanctions screening results
-                would appear here.
               </p>
             </div>
           </div>
@@ -464,18 +543,22 @@ export default function App() {
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
-              Transaction History
+              Transaction Analysis
             </h3>
-            <p style={{ color: "#B8BCC1" }}>
-              Historical transactions between the payee and payer entities,
-              including pattern analysis and anomaly detection.
-            </p>
-            <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
-              <p className="text-sm" style={{ color: "#B8BCC1" }}>
-                Previous transaction data and behavioral patterns would be
-                displayed here.
+            {analysisData?.transaction_analysis ? (
+              <div
+                className="prose prose-invert max-w-none"
+                style={{ color: "#B8BCC1" }}
+              >
+                <ReactMarkdown className="text-sm">
+                  {analysisData.transaction_analysis}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <p style={{ color: "#B8BCC1" }}>
+                No transaction analysis available.
               </p>
-            </div>
+            )}
           </div>
         )
     }

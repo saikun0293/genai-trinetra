@@ -3,8 +3,14 @@ import os
 from typing import Any, Dict, List, Optional
 from google.adk.agents import LlmAgent
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.tools.agent_tool import AgentTool
 from app.sub_agents.bigquery_agent.agent import bigquery_agent
+from app.sub_agents.payee_vendor_agent.tools import (
+    upsert_state,
+    get_vendor_for_payee,
+    analyze_vendor_patterns,
+    identify_suspicious_payers,
+    analyze_temporal_patterns,
+)
 from .prompt import PAYEE_VENDOR_PROMPT
 
 # Configure logging
@@ -21,7 +27,13 @@ payee_agent = LlmAgent(
     ),
     instruction=PAYEE_VENDOR_PROMPT,
     output_key = "payee_agent",
-    tools=[AgentTool(bigquery_agent)],
+    tools=[
+        get_vendor_for_payee,
+        analyze_vendor_patterns,
+        identify_suspicious_payers,
+        analyze_temporal_patterns,
+        upsert_state,
+    ],
     include_contents='none'  # Don't respond to user directly, only write to state
 )
 

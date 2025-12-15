@@ -76,9 +76,8 @@ If required data is missing, do NOT estimate or interpolate.
   - Missing or incomplete compliance data materially lowers confidence, not assumed risk
 
 • Transaction Score:
-  - Approval ratio (if available)
-  - Frequency spikes or abnormal volumes (if stated)
-  - If no transaction history is present, assign a neutral score of 50
+  - Use the Risk Score from the Transaction Frequency Analysis if available.
+  - If no Risk Score is present, assign a neutral score of 50.
 
 ---
 
@@ -126,12 +125,20 @@ GUIDELINES:
 
 ---
 
+STEP 6 — GENERATE MARKDOWN REPORT
+
+- Create a comprehensive but concise markdown report summarizing the final decision.
+- The report should include the final score, confidence, category, and a brief rationale based on the key findings from the input analyses.
+- This report is for human review.
+
+---
+
 STRICT OUTPUT REQUIREMENTS:
 - DO NOT return numeric sub-scores
 - DO NOT show calculations
-- DO NOT include markdown
 - DO NOT include explanations outside JSON
 - DO NOT introduce facts not present in the inputs
+- The final output MUST be a single, valid JSON object. Markdown is only permitted as a string value within the `critique_agent_response_markdown` field.
 
 ---
 
@@ -170,6 +177,7 @@ RETURN STRICT JSON ONLY IN THIS FORMAT:
     "category": "APPROVED | REVIEW | REJECTED",
     "reason": string,
     "notes": string
-  }
+  },
+  "critique_agent_response_markdown": string
 }
 """

@@ -17,49 +17,86 @@ bq_client = bigquery.Client()
 # --- TODO: Replace this with your actual BigQuery table ID ---
 BQ_TABLE_ID = "ccibt-hack25ww7-714.tri_netra_payments.PaymentsCompliance"
 
-
-def analyze_transaction_frequency() -> dict:
+def analyze_transaction_frequency(
+    payer_id: str,
+    vendor_id: str,
+    transaction_id: str
+) -> str:
     """
-    Performs frequency analysis on a predefined transaction data table.
-    This tool queries the table, counts 'approved' and 'rejected' transactions
-    for each payer-vendor pair, and returns a summary.
-
-    Returns:
-        A dictionary containing the frequency map of transactions.
+    Evaluates a single transaction using historical payer-vendor behavior and returns a markdown summary.
+    """
+ 
+    query = f"""
+    SELECT
+      COUNTIF(approval_status = 'APPROVED') as approved_count,
+      COUNTIF(approval_status = 'REJECTED') as rejected_count,
+      COUNT(*) as total_transactions
+    FROM `{BQ_TABLE_ID}`
+    WHERE payer_id = @payer_id
+      AND vendor_id = @vendor_id
     """
     try:
-        query = f"SELECT payer_id, vendor_id, approval_status FROM `{BQ_TABLE_ID}`"
-        transactions = bq_client.query(query).result()
-        freq_map = defaultdict(lambda: {"approved": 0, "rejected": 0, "total_transcations": 0})
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("payer_id", "STRING", payer_id),
+                bigquery.ScalarQueryParameter("vendor_id", "STRING", vendor_id),
+            ]
+        )
+        results = list(bq_client.query(query, job_config=job_config).result())
+        
+        if not results:
+            stats = {"approved_count": 0, "rejected_count": 0, "total_transactions": 0}
+        else:
+            stats = dict(results[0])
+        
+        total = stats.get("total_transactions", 0)
+        approved = stats.get("approved_count", 0)
+        rejected = stats.get("rejected_count", 0)
 
-        for tx in transactions:
-            key = (tx["payer_id"], tx["vendor_id"])
-            status = tx.get("approval_status", "unknown").lower()
+        approval_rate = approved / total if total else 0
+        rejection_rate = rejected / total if total else 0
 
-            freq_map[key]["total_transcations"] += 1
-            if status == "approved":
-                freq_map[key]["approved"] += 1
-            elif status == "rejected":
-                freq_map[key]["rejected"] += 1
-        # Convert tuple keys to strings for JSON compatibility
-        string_key_map = {f"{k[0]}-{k[1]}": v for k, v in freq_map.items()}
-        return {"frequency_map": string_key_map}
+        if total == 0:
+            # No history for this payer-vendor pair, consider it medium risk.
+            risk_score = 50
+            risk_level = "MEDIUM"
+        else:
+            risk_score = rejection_rate * 100
+            risk_level = "HIGH" if risk_score >= 80 else "MEDIUM" if risk_score >= 50 else "LOW"
+
+        action = "ALLOW" if risk_level == "LOW" else "REVIEW" if risk_level == "MEDIUM" else "BLOCK"
+
+        markdown_output = f"""### Transaction Frequency Analysis
+- **Transaction ID**: {transaction_id}
+- **Payer ID**: {payer_id}
+- **Vendor ID**: {vendor_id}
+#### Historical Summary
+- **Total Transactions**: {total}
+- **Approved**: {approved}
+- **Rejected**: {rejected}
+- **Approval Rate**: {approval_rate:.0%}
+- **Rejection Rate**: {rejection_rate:.0%}
+#### Risk Assessment
+- **Risk Score**: {risk_score:.0f}
+- **Risk Level**: {risk_level}
+#### Recommended Decision
+- **Action**: {action}
+"""
+        return markdown_output
     except Exception as e:
-        logger.error(f"An error occurred during BigQuery processing: {e}", exc_info=True)
-        return {"error": "An error occurred while analyzing transaction data."}
-
+        logger.error(f"Error analyzing transaction frequency for payer {payer_id}, vendor {vendor_id}: {e}")
+        return f"Error analyzing transaction: {e}"
 
 
 transaction_agent = LlmAgent(
     name="transaction_agent",
     # Provide a default model to prevent errors if the env var is not set.
     model=os.environ.get("ADK_MODEL", "gemini-2.5-pro"),
-    description="Analyzes transaction data to calculate the frequency of approved and rejected transactions.",
+    description="Analyzes transaction data to calculate the frequency of approved and rejected transactions for the current payer, vendor involved",
     instruction=TRANSACTION_AGENT_PROMPT,
     tools=[FunctionTool(analyze_transaction_frequency)],
     output_key="transaction_agent",
-    include_contents='none'  # Don't respond to user directly, only write to state
+    #include_contents='none'  # Don't respond to user directly, only write to state
 )
 
 logger.info("Transaction agent initialized successfully")
-

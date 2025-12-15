@@ -29,6 +29,10 @@ from app.sub_agents.payee_vendor_agent import payee_agent
 from app.sub_agents.payer_validation_agent import payer_validation_agent
 from app.sub_agents.transaction_agent import transaction_agent
 from app.sub_agents.critique_agent import critique_agent
+from google.adk.tools.agent_tool import AgentTool
+from google.adk.agents import Agent
+from .prompt import ROOT_ORCHESTRATOR_PROMPT
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -62,6 +66,7 @@ def log_agent_outputs(callback_context: CallbackContext) -> None:
     logger.info("=" * 80)
 
 
+
 # Parallel agent that runs all compliance analysis agents concurrently
 compliance_analyzer = ParallelAgent(
     name="compliance_analyzer",
@@ -73,18 +78,26 @@ compliance_analyzer = ParallelAgent(
 logger.info("Compliance analyzer (parallel agent) initialized successfully")
 
 # Root agent that orchestrates the entire compliance workflow
-root_agent = SequentialAgent(
+compliance_orchestrator = SequentialAgent(
     name="compliance_orchestrator",
     description="Orchestrates the end-to-end compliance check by running analysis agents in parallel, then synthesizing with a critique agent.",
     sub_agents=[compliance_analyzer, critique_agent]
 )
 
-logger.info("Root agent (compliance orchestrator) initialized successfully")
-
+compliance_orchestrator_agent = AgentTool(agent = compliance_orchestrator)
 # Create the App instance - this is what gets loaded by ADK and deployed
+
+root_orchestrator_agent = Agent(
+    name="root_orchestrator_agent",
+    model="gemini-2.5-flash",
+    description="The main orchestrator that delegates tasks to specialist agents for compliance",
+    instruction=ROOT_ORCHESTRATOR_PROMPT,
+    tools=[compliance_orchestrator_agent]
+)
+
 app = App(
     name="app",
-    root_agent=root_agent
+    root_agent=root_orchestrator_agent
 )
 
 logger.info("Compliance application initialized successfully")

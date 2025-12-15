@@ -1,4 +1,4 @@
-from google.adk.agents import Agent
+from google.adk.agents import LlmAgent
 from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
 from google.adk.tools.bigquery.config import BigQueryToolConfig
 from google.adk.tools.bigquery.config import WriteMode
@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from google.adk.agents.callback_context import CallbackContext
 
 load_dotenv()
-database_settings = None
 
 toolconfig = BigQueryToolConfig(write_mode = WriteMode.BLOCKED)
 credentials,_ = google.auth.default()
@@ -16,9 +15,13 @@ credentials_config = BigQueryCredentialsConfig(credentials = credentials)
 
 bigquery_toolset = BigQueryToolset(credentials_config=credentials_config,bigquery_tool_config=toolconfig)
 
+database_settings = None
+
+
 def setup_before_agent_call(callback_context: CallbackContext) -> None:
     """Setup the agent."""
 
+    print("Setting up agent...")
     if "database_settings" not in callback_context.state:
         callback_context.state["database_settings"] = (
             get_database_settings()
@@ -34,6 +37,7 @@ def get_database_settings():
 
 
 def update_database_settings():
+    print("Setting up agent...")
     """Update database settings."""
     global database_settings
     print("Updating database settings...",os.getenv("GOOGLE_CLOUD_PROJECT"))
@@ -43,32 +47,48 @@ def update_database_settings():
     }
     return database_settings
 
-bigquery_agent = Agent(
-    name="BQL_Agent",
-    model=os.getenv("MODEL"),
-    description=(
-        "Retrieves transaction data from BigQuery by translating "
-        "natural language requests into safe, read-only BigQuery SQL queries."
-    ),
-    instruction="""
-    You are a BigQuery data retrieval agent.
-
-    Your responsibility is to:
-    - Translate natural language data requests into safe, read-only BigQuery SQL queries.
-    - Only use SELECT statements.
-    - Only query the tables you are allowed to access.
-    - Return structured results
-
-    You must NEVER:
-    - Modify data
-    - Use non-SELECT statements
-    - Assume schema beyond what is provided
-
-    Note the following details -
-    projectID - ccibt-hack25ww7-714
-    dataSetId - ccibt-hack25ww7-714.tri_netra_payments
-    tableName - PaymentsCompliance
-""",
-    before_agent_callback=setup_before_agent_call,
-    tools=[bigquery_toolset]
+# BigQuery NL-to-SQL Agent
+bigquery_agent = LlmAgent(
+    name="bigquery_agent",
+    model="gemini-2.0-flash",
+    description="Natural language to BigQuery SQL agent that executes queries on transaction data",
+    instruction=f"""
+    You are a BigQuery SQL expert specialized in payment transaction data analysis.
+    
+    You have access to a BigQuery table with the following schema:
+    
+    - The project ID is {os.getenv("GOOGLE_CLOUD_PROJECT")}
+    - The dataset ID is {os.getenv("BQ_DATASET_ID")}
+    - The table ID is {os.getenv("BQ_TABLE_ID")}: ``
+    Columns:
+    - transaction_id (STRING): Unique transaction identifier
+    - payment_time (TIMESTAMP): When the payment occurred
+    - payer_id (STRING): The customer/entity initiating payment
+    - payee_id (STRING): The recipient account identifier
+    - payment_amount (FLOAT): Transaction amount
+    - payment_currency (STRING): Currency code (USD, EUR, GBP, CAD, etc.)
+    - payment_method (STRING): Payment method (ACH, Wire Transfer, Check, Bank Transfer, etc.)
+    - payment_purpose (STRING): Description of payment purpose
+    - vendor_id (STRING): Merchant/business identifier
+    - payee_country (STRING): Payee's country
+    - vendor_country (STRING): Vendor's country
+    - vendor_industry (STRING): Industry classification (Manufacturing, Retail, Logistics, etc.)
+    - approval_status (STRING): APPROVED or REJECTED
+    - reject_reason (STRING): Reason for rejection if applicable
+    
+    Your role:
+    1. Convert natural language requests into accurate BigQuery SQL queries
+    2. Execute the queries and return results in a clear, structured format
+    3. Always filter and aggregate appropriately based on the request
+    4. Use proper SQL functions for date/time, aggregations, and statistical calculations
+    5. Return data in JSON format with clear field names
+    
+    When asked for transaction data, include ALL relevant columns unless specifically told otherwise.
+    When asked for statistics, calculate metrics like AVG, STDDEV, MIN, MAX, COUNT, SUM appropriately.
+    When asked about relationships (payer-payee, payer-vendor), group and aggregate properly.
+    
+    Always parameterize queries for safety when filtering by specific IDs.
+    """,
+    before_agent_callback= setup_before_agent_call,
+    tools=[bigquery_toolset]  # In production, you'd add actual BigQuery execution tool here
 )

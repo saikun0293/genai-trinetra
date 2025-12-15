@@ -8,7 +8,7 @@ This is a GenAI Hackathon project using Google ADK for agent development. Try to
 
 - `context/`: For context purposes only contains ADK samples, docs etc.
 - `app/`: Main application code
-- `app/frontend`: Frontend interface
+- `frontend/`: Frontend interface
 - `app/sub_agents/`: Sub-agent implementations
 - `deployment/`: Terraform infrastructure
 - `tests/`: Test suites

@@ -19,7 +19,7 @@ payer_validation_agent = LlmAgent(
     tools=[
         AgentTool(bigquery_agent, skip_summarization=False)
     ],
-    include_contents=False  # Don't respond to user directly, only write to state
+    include_contents='none'  # Don't respond to user directly, only write to state
 )
 
 logger.info("Payer validation agent initialized successfully")

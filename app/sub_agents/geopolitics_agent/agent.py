@@ -13,7 +13,7 @@ geopolitics_agent = LlmAgent(
     instruction=GEOPOLITICS_AGENT_PROMPT,
     tools=[google_search],
     output_key='geopolitics_agent',  # Fixed: removed dot, use underscore
-    include_contents=False  # Don't respond to user directly, only write to state
+    include_contents='none'  # Don't respond to user directly, only write to state
 )
 
 logger.info("Geopolitics compliance agent initialized successfully")

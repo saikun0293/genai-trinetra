@@ -66,7 +66,8 @@ def log_agent_outputs(callback_context: CallbackContext) -> None:
 compliance_analyzer = ParallelAgent(
     name="compliance_analyzer",
     description="Runs multiple compliance analysis agents in parallel to assess different aspects of a transaction simultaneously.",
-    sub_agents=[payee_agent, payer_validation_agent, geopolitics_agent, transaction_agent],   
+    sub_agents=[payee_agent, payer_validation_agent, geopolitics_agent, transaction_agent],
+    after_agent_callback=log_agent_outputs  # Log state after parallel execution completes
 )
 
 logger.info("Compliance analyzer (parallel agent) initialized successfully")

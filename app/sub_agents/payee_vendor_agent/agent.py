@@ -22,7 +22,7 @@ payee_agent = LlmAgent(
     instruction=PAYEE_VENDOR_PROMPT,
     output_key = "payee_agent",
     tools=[AgentTool(bigquery_agent)],
-    include_contents=False  # Don't respond to user directly, only write to state
+    include_contents='none'  # Don't respond to user directly, only write to state
 )
 
 logger.info("Payee vendor agent initialized successfully") 

@@ -18,7 +18,7 @@ bq_client = bigquery.Client()
 BQ_TABLE_ID = "ccibt-hack25ww7-714.tri_netra_payments.PaymentsCompliance"
 
 
-def analyze_transaction_frequency_func() -> dict:
+def analyze_transaction_frequency() -> dict:
     """
     Performs frequency analysis on a predefined transaction data table.
     This tool queries the table, counts 'approved' and 'rejected' transactions
@@ -56,9 +56,9 @@ transaction_agent = LlmAgent(
     model=os.environ.get("ADK_MODEL", "gemini-2.5-pro"),
     description="Analyzes transaction data to calculate the frequency of approved and rejected transactions.",
     instruction=TRANSACTION_AGENT_PROMPT,
-    tools=[FunctionTool(analyze_transaction_frequency_func)],
+    tools=[FunctionTool(analyze_transaction_frequency)],
     output_key="transaction_agent",
-    include_contents=False  # Don't respond to user directly, only write to state
+    include_contents='none'  # Don't respond to user directly, only write to state
 )
 
 logger.info("Transaction agent initialized successfully")

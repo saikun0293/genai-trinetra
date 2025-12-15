@@ -15,8 +15,17 @@ Mention in your gemini prompts to use context/ if you wish, and you can store co
 
 ### Running the app
 
-- frontend : `cd frontend && npm run dev`
-- backend : `uv run adk api_server . --port 8000`
+**Option 1: ADK API Server (agent-only)**
+
+- Frontend: `cd frontend && npm run dev`
+- Backend: `uv run adk api_server . --port 8000`
+
+**Option 2: Custom API Server (agent + custom endpoints)**
+
+- Frontend: `cd frontend && npm run dev`
+- Backend: `python -m app.api_server`
+
+See [app/API_SERVER_README.md](app/API_SERVER_README.md) for details on using custom endpoints alongside the agent.
 
 ## About
 

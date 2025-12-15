@@ -9,7 +9,7 @@ from app.sub_agents.bigquery_agent import bigquery_agent
 
 
 # Main Payer Anomaly Detection Agent
-root_agent = Agent(
+xyzagent = Agent(
     name="root_agent",
     model="gemini-2.0-flash",
     description="Banking fraud detection agent specialized in payer transaction anomaly detection",

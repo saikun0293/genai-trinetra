@@ -13,14 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
+"""
+Main agent module for the compliance orchestrator.
+This module defines the root agent that coordinates parallel compliance analysis.
+"""
+
 import logging
 import os
-from zoneinfo import ZoneInfo
-
 import google.auth
-from google.adk.agents import Agent
 from google.adk.apps.app import App
+from google.adk.agents import ParallelAgent, SequentialAgent
+from google.adk.agents.callback_context import CallbackContext
+from app.sub_agents.geopolitics_agent import geopolitics_agent
+from app.sub_agents.payee_vendor_agent import payee_agent
+from app.sub_agents.payer_validation_agent import payer_validation_agent
+from app.sub_agents.transaction_agent import transaction_agent
+from app.sub_agents.critique_agent import critique_agent
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,52 +40,51 @@ os.environ["GOOGLE_CLOUD_PROJECT"] = os.getenv("GOOGLE_CLOUD_PROJECT", project_i
 os.environ["GOOGLE_CLOUD_LOCATION"] = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
-logger.info(f"Initialized with project: {project_id}, location: {os.environ['GOOGLE_CLOUD_LOCATION']}")
+logger.info(f"Compliance orchestrator initialized with project: {project_id}, location: {os.environ['GOOGLE_CLOUD_LOCATION']}")
 
 
-def get_weather(query: str) -> str:
-    """Simulates a web search. Use it get information on weather.
-
-    Args:
-        query: A string containing the location to get weather information for.
-
-    Returns:
-        A string with the simulated weather information for the queried location.
-    """
-    logger.info(f"Getting weather for query: {query}")
-    if "sf" in query.lower() or "san francisco" in query.lower():
-        return "It's 60 degrees and foggy."
-    return "It's 90 degrees and sunny."
-
-
-def get_current_time(query: str) -> str:
-    """Simulates getting the current time for a city.
-
-    Args:
-        query: The name of the city to get the current time for.
-
-    Returns:
-        A string with the current time information.
-    """
-    logger.info(f"Getting current time for query: {query}")
-    if "sf" in query.lower() or "san francisco" in query.lower():
-        tz_identifier = "America/Los_Angeles"
-    else:
-        return f"Sorry, I don't have timezone information for query: {query}."
-
-    tz = ZoneInfo(tz_identifier)
-    now = datetime.datetime.now(tz)
-    return f"The current time for query {query} is {now.strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
+def log_agent_outputs(callback_context: CallbackContext) -> None:
+    """Log session state after parallel agents complete to verify outputs are stored."""
+    logger.info("=" * 80)
+    logger.info("COMPLIANCE ANALYZER - Session State After Parallel Execution")
+    logger.info("=" * 80)
+    
+    state = callback_context.session.state
+    agent_keys = ["payee_agent", "payer_validation_agent", "geopolitics_agent", "transaction_agent"]
+    
+    for key in agent_keys:
+        if key in state:
+            output_preview = str(state[key])[:200] if state[key] else "None"
+            logger.info(f"✓ {key}: Present ({len(str(state[key]))} chars) - {output_preview}...")
+        else:
+            logger.warning(f"✗ {key}: MISSING from session state")
+    
+    logger.info("=" * 80)
 
 
-root_agent = Agent(
-    name="root_agent",
-    model="gemini-2.5-pro",
-    instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
-    tools=[get_weather, get_current_time]
+# Parallel agent that runs all compliance analysis agents concurrently
+compliance_analyzer = ParallelAgent(
+    name="compliance_analyzer",
+    description="Runs multiple compliance analysis agents in parallel to assess different aspects of a transaction simultaneously.",
+    sub_agents=[payee_agent, payer_validation_agent, geopolitics_agent, transaction_agent],
+    after_agent_callback=log_agent_outputs  # Log state after parallel execution completes
 )
 
-# Create ADK App - this automatically creates FastAPI app with SSE support
-app = App(root_agent=root_agent, name="app")
+logger.info("Compliance analyzer (parallel agent) initialized successfully")
 
-logger.info("Agent application initialized successfully")
+# Root agent that orchestrates the entire compliance workflow
+root_agent = SequentialAgent(
+    name="compliance_orchestrator",
+    description="Orchestrates the end-to-end compliance check by running analysis agents in parallel, then synthesizing with a critique agent.",
+    sub_agents=[compliance_analyzer, critique_agent]
+)
+
+logger.info("Root agent (compliance orchestrator) initialized successfully")
+
+# Create the App instance - this is what gets loaded by ADK and deployed
+app = App(
+    name="app",
+    root_agent=root_agent
+)
+
+logger.info("Compliance application initialized successfully")

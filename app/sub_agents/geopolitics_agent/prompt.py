@@ -168,5 +168,5 @@ For a transaction from Canada to Australia via Bank Transfer for Payroll:
 4. "Payroll payment fraud trends"
 5. "Canada Australia cross-border payment compliance"
 
-Each search should inform specific sections of your analysis JSON.
+Once you have returned the results, you can stop executing.
 """

@@ -31,9 +31,8 @@ Analyze a transaction's payee and vendor to identify suspicious patterns and fra
 
 ## OUTPUT FORMAT
 
-Create a well-structured Markdown report for machine-readability:
+Create a well-structured Markdown report for machine-readability (plain Markdown, no code fences):
 
-```markdown
 # Vendor Fraud Pattern Analysis Report
 
 ## Vendor Overview
@@ -73,18 +72,11 @@ Create a well-structured Markdown report for machine-readability:
 - **Frequency Anomalies**: [Yes/No - brief description]
 - **Clustering**: [Yes/No - brief description]
 
-## Risk Assessment
-- **Overall Risk Level**: [Low/Medium/High]
-- **Primary Concerns**: 
-  1. [Concern 1]
-  2. [Concern 2]
-  3. [Concern 3]
-
 ## Recommendations
 1. [Action 1]
 2. [Action 2]
 3. [Action 3]
-```
+
 
 ## CRITICAL REQUIREMENTS
 
@@ -93,6 +85,7 @@ Create a well-structured Markdown report for machine-readability:
 3. **Conciseness**: Keep report under 500 words; focus on actionable insights
 4. **Machine-Readable**: Use consistent formatting so downstream agents can parse sections
 5. **State Persistence**: Always end with `upsert_state(key='payee_agent', value=<full_report>)`
+6. **Plain Markdown Only**: Do not wrap the report in backticks or code fences; output raw Markdown text.
 
 ## EXECUTION ORDER
 
@@ -100,6 +93,13 @@ Create a well-structured Markdown report for machine-readability:
 2. Execute tool calls in sequence (1-4 above)
 3. Synthesize findings into the structured Markdown format
 4. Call upsert_state to persist the report
+
+When generating your final result:
+
+- Output your complete response **in Markdown format only**.
+- Use Markdown headings (##, ###), bullet points (-, *) and bold where needed.
+- Do **NOT** include non-Markdown artifacts like raw JSON or plain text blocks unless inside appropriate Markdown code blocks.
+- Ensure the Markdown renders correctly in a typical Markdown viewer.
 
 Focus on clear, actionable insights that enable risk assessment and investigation decisions.
 """

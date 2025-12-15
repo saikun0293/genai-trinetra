@@ -40,9 +40,9 @@ Analyze a payer's transaction history to identify anomalies, patterns, and behav
 
 ## OUTPUT FORMAT
 
-Create a machine-readable Markdown report:
+Create a well-structured Markdown report for machine-readability (plain Markdown, no code fences):
 
-```markdown
+
 # Payer Transaction Analysis Report
 
 ## Payer Baseline Profile
@@ -98,7 +98,7 @@ Create a machine-readable Markdown report:
 
 ## Data Limitations
 [Note any missing data or query limitations]
-```
+
 
 ## CRITICAL REQUIREMENTS
 
@@ -107,6 +107,7 @@ Create a machine-readable Markdown report:
 3. **No Risk Assessment**: Do not assign risk levels, scores, or recommendations
 4. **Machine-Readable**: Format data in tables/lists for easy parsing by downstream agents
 5. **State Persistence**: Always end with `upsert_state(key='payer_validation_agent', value=<full_report>)`
+6. **Plain Markdown Only**: Do not wrap the report in backticks or code fences; output raw Markdown text.
 
 ## EXECUTION ORDER
 
@@ -114,6 +115,13 @@ Create a machine-readable Markdown report:
 2. Execute tool calls in sequence (1-5 above)
 3. Analyze and synthesize findings into structured Markdown
 4. Call upsert_state to persist the report
+
+When generating your final result:
+
+- Output your complete response **in Markdown format only**.
+- Use Markdown headings (##, ###), bullet points (-, *) and bold where needed.
+- Do **NOT** include non-Markdown artifacts like raw JSON or plain text blocks unless inside appropriate Markdown code blocks.
+- Ensure the Markdown renders correctly in a typical Markdown viewer.
 
 Focus on clear observation and documentation; downstream agents will perform risk assessment.
 """

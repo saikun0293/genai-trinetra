@@ -1,6 +1,5 @@
 import logging
 from google.adk.agents import LlmAgent
-from google.adk.tools.function_tool import FunctionTool
 from google.adk.tools.tool_context import ToolContext
 from .tools import (
     get_payer_baseline,
@@ -24,11 +23,11 @@ payer_validation_agent = LlmAgent(
     instruction=PAYER_VALIDATION_PROMPT,
     output_key="payer_validation_agent",
     tools=[
-        get_payer_baseline
-        get_recent_transactions
-        analyze_velocity_patterns
-        identify_anomalies
-        analyze_rejection_patterns
+        get_payer_baseline,
+        get_recent_transactions,
+        analyze_velocity_patterns,
+        identify_anomalies,
+        analyze_rejection_patterns,
         upsert_state
     ],
     include_contents='none'  # Don't respond to user directly, only write to state

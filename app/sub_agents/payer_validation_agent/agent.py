@@ -1,11 +1,11 @@
 
-from google.adk.agents import Agent
+from google.adk.agents import LlmAgent
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools.tool_context import ToolContext
 from app.sub_agents.bigquery_agent import bigquery_agent
 
 # Main Payer Anomaly Detection Agent
-payer_validation_agent = Agent(
+payer_validation_agent = LlmAgent(
     name="payer_validation_agent",
     model="gemini-2.0-flash",
     description="Banking fraud detection agent specialized in payer transaction anomaly detection",

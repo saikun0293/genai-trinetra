@@ -40,7 +40,6 @@ compliance_analyzer = ParallelAgent(
     name="compliance_analyzer",
     description="Runs multiple compliance analysis agents in parallel to assess different aspects of a transaction simultaneously.",
     sub_agents=[payee_agent, payer_validation_agent, geopolitics_agent, transaction_agent],   
-    max_iterations=1
 )
 
 root_agent = SequentialAgent(

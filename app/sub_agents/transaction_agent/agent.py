@@ -2,7 +2,7 @@ from collections import defaultdict
 import logging
 import os
 from google.adk.apps.app import App
-from google.adk.agents import Agent
+from google.adk.agents import LlmAgent
 from google.cloud import bigquery
 from google.adk.tools import FunctionTool
 # Configure logging
@@ -48,7 +48,7 @@ def analyze_transaction_frequency_func() -> dict:
 
 
 
-transaction_agent = Agent(
+transaction_agent = LlmAgent(
     name="transaction_agent",
     # Provide a default model to prevent errors if the env var is not set.
     model=os.environ.get("ADK_MODEL", "gemini-2.5-pro"),

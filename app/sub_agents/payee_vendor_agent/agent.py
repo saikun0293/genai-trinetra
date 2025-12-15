@@ -1,7 +1,7 @@
 import logging
 import os
 from typing import Any, Dict, List, Optional
-from google.adk.agents import Agent
+from google.adk.agents import LlmAgent
 from google.adk.agents.callback_context import CallbackContext
 
 from google.adk.tools.agent_tool import AgentTool
@@ -12,7 +12,7 @@ from google.adk.tools.agent_tool import AgentTool
 import os
 
 # Payee-Vendor Relationship Analysis Agent
-payee_agent = Agent(
+payee_agent = LlmAgent(
     name="payee_vendor_agent",
     model="gemini-2.0-flash",
     description=(

@@ -1,17 +1,3 @@
-# Copyright 2025 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
 Custom FastAPI server that exposes both the ADK agent and custom API endpoints.
 
@@ -33,6 +19,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from google.adk.cli.fast_api import get_fast_api_app
+from google.cloud import bigquery
 from pydantic import BaseModel
 
 # Configure logging
@@ -71,10 +58,102 @@ app.add_middleware(
 
 logger.info("ADK FastAPI app initialized with custom endpoints")
 
+# Initialize BigQuery client
+try:
+    bq_client = bigquery.Client()
+    logger.info("BigQuery client initialized successfully")
+except Exception as e:
+    logger.warning(f"BigQuery client initialization failed: {e}")
+    bq_client = None
+
 # =============================================================================
 # Custom API Endpoints
 # Add your own REST endpoints below alongside the agent endpoints
 # =============================================================================
+
+
+# BigQuery endpoint to fetch transactions
+@app.get("/getTransactions")
+async def get_transactions(
+    limit: int | None = None,
+    offset: int = 0,
+    fetch_all: bool = True
+) -> dict[str, Any]:
+    """
+    Fetch transactions from BigQuery table.
+    
+    Args:
+        limit: Maximum number of transactions to return (optional)
+        offset: Number of transactions to skip for pagination (default: 0)
+        fetch_all: If True, fetches all transactions ignoring limit (default: True)
+    
+    Returns:
+        List of transactions with all fields and pagination metadata
+    """
+    if not bq_client:
+        raise HTTPException(
+            status_code=503,
+            detail="BigQuery client not initialized. Check credentials."
+        )
+    
+    try:
+        table_id = "ccibt-hack25ww7-714.tri_netra_payments.PaymentsCompliance"
+        
+        # Build query with optional pagination
+        if fetch_all:
+            query = f"""
+                SELECT *
+                FROM `{table_id}`
+                ORDER BY transaction_id DESC
+            """
+            logger.info(f"Fetching ALL transactions from BigQuery table: {table_id}")
+        else:
+            limit_clause = f"LIMIT {limit}" if limit else ""
+            offset_clause = f"OFFSET {offset}" if offset > 0 else ""
+            query = f"""
+                SELECT *
+                FROM `{table_id}`
+                ORDER BY transaction_id DESC
+                {limit_clause} {offset_clause}
+            """
+            logger.info(f"Fetching transactions with limit={limit}, offset={offset}")
+        
+        query_job = bq_client.query(query)
+        results = query_job.result()
+        
+        # Convert to list of dictionaries
+        transactions = []
+        for row in results:
+            transaction = dict(row)
+            # Convert any non-serializable types
+            for key, value in transaction.items():
+                if hasattr(value, 'isoformat'):
+                    transaction[key] = value.isoformat()
+            transactions.append(transaction)
+        
+        logger.info(f"Successfully fetched {len(transactions)} transactions")
+        
+        # Get total count for pagination info
+        count_query = f"SELECT COUNT(*) as total FROM `{table_id}`"
+        count_job = bq_client.query(count_query)
+        total_count = list(count_job.result())[0]['total']
+        
+        return {
+            "success": True,
+            "count": len(transactions),
+            "total": total_count,
+            "offset": offset,
+            "limit": limit if not fetch_all else None,
+            "has_more": (offset + len(transactions)) < total_count if not fetch_all else False,
+            "transactions": transactions
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching transactions from BigQuery: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch transactions: {str(e)}"
+        )
 
 
 # Example: Health check endpoint

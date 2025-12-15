@@ -9,6 +9,7 @@ from .tools import (
     analyze_rejection_patterns,
     upsert_state,
 )
+from app.sub_agents.utils import create_analysis_callback
 from .prompt import PAYER_VALIDATION_PROMPT
 
 # Configure logging
@@ -34,7 +35,8 @@ payer_validation_agent = LlmAgent(
         analyze_rejection_patterns,
         upsert_state
     ],
-    include_contents='none'  # Don't respond to user directly, only write to state
+    include_contents='none',  # Don't respond to user directly, only write to state
+    after_agent_callback=create_analysis_callback("payer_analysis", "payer_validation_agent")  # Store in BigQuery
 )
 
 logger.info("Payer validation agent initialized successfully")

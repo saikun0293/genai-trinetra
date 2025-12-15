@@ -22,7 +22,7 @@ import logging
 import os
 import google.auth
 from google.adk.apps.app import App
-from google.adk.agents import ParallelAgent, SequentialAgent
+from google.adk.agents import ParallelAgent, SequentialAgent, LlmAgent
 from google.adk.agents.callback_context import CallbackContext
 from app.sub_agents.geopolitics_agent import geopolitics_agent
 from app.sub_agents.payee_vendor_agent import payee_agent
@@ -46,6 +46,32 @@ os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 logger.info(f"Compliance orchestrator initialized with project: {project_id}, location: {os.environ['GOOGLE_CLOUD_LOCATION']}")
 
+
+# Transaction ID request agent - extracts or requests transaction_id from user
+transaction_id_agent = LlmAgent(
+    name="transaction_id_requester",
+    model="gemini-2.0-flash",
+    output_key="transaction_id",
+    description="Extracts transaction_id from user's message or requests it if not provided.",
+    instruction="""
+You are a compliance assistant. Your ONLY job is to extract the transaction_id from the user's message.
+
+Check the session state for "transaction_id". If it already exists, output ONLY that transaction ID value (nothing else).
+
+If NOT in session state, look at the user's current message for a transaction ID. Common patterns:
+- TXN_001, TXN_12345
+- transaction_id: ABC123
+- TX001, TRANS_456
+
+If you find one:
+Output ONLY the transaction ID itself (e.g., "TXN_001" or "ABC123"). No other text.
+
+If you DON'T find one:
+Ask: "Please provide a transaction ID to analyze (e.g., TXN_001)."
+
+CRITICAL: When outputting a found transaction ID, return ONLY the ID with no additional text.
+"""
+)
 
 def log_agent_outputs(callback_context: CallbackContext) -> None:
     """Log session state after parallel agents complete to verify outputs are stored."""
@@ -80,8 +106,8 @@ logger.info("Compliance analyzer (parallel agent) initialized successfully")
 # Root agent that orchestrates the entire compliance workflow
 compliance_orchestrator = SequentialAgent(
     name="compliance_orchestrator",
-    description="Orchestrates the end-to-end compliance check by running analysis agents in parallel, then synthesizing with a critique agent.",
-    sub_agents=[compliance_analyzer, critique_agent]
+    description="Orchestrates the end-to-end compliance check by first ensuring transaction_id is available, then running analysis agents in parallel, and finally synthesizing with a critique agent.",
+    sub_agents=[transaction_id_agent, compliance_analyzer, critique_agent],
 )
 
 compliance_orchestrator_agent = AgentTool(agent = compliance_orchestrator)

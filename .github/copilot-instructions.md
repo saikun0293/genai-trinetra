@@ -25,4 +25,4 @@ This is a GenAI Hackathon project using Google ADK for agent development. Try to
 - Main agent: `app/agent.py`
 - Sub-agents communicate through session state
 
-Do not create any summary markdown files unless explicitly instructed.
+Do not create any summary markdown files unless explicitly instructed. Try to generate concise code whenever possible.

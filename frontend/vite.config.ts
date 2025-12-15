@@ -25,6 +25,22 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, "")
+      },
+      // Proxy agent endpoints (sessions, run_sse, etc.)
+      "/apps": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+        secure: false
+      },
+      "/run_sse": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+        secure: false
+      },
+      "/run": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+        secure: false
       }
     }
   }

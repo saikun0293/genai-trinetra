@@ -99,7 +99,9 @@ bigquery_agent = LlmAgent(
     Always parameterize queries for safety when filtering by specific IDs.
     """,
     before_agent_callback= setup_before_agent_call,
-    tools=[bigquery_toolset]
+    tools=[bigquery_toolset],
+    output_key="bigquery_agent",
+    include_contents='none'  # Don't respond to user directly, only write to state
 )
 
 logger.info("BigQuery agent initialized successfully")

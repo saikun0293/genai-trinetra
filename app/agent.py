@@ -14,19 +14,25 @@
 # limitations under the License.
 
 import datetime
+import logging
+import os
 from zoneinfo import ZoneInfo
 
+import google.auth
 from google.adk.agents import Agent
 from google.adk.apps.app import App
-from .sub_agents.ingestion_agent import ingestion_agent
 
-import os
-import google.auth
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+# Set up Google Cloud authentication and environment
 _, project_id = google.auth.default()
-os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
+os.environ["GOOGLE_CLOUD_PROJECT"] = os.getenv("GOOGLE_CLOUD_PROJECT", project_id)
+os.environ["GOOGLE_CLOUD_LOCATION"] = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+
+logger.info(f"Initialized with project: {project_id}, location: {os.environ['GOOGLE_CLOUD_LOCATION']}")
 
 
 def get_weather(query: str) -> str:
@@ -38,6 +44,7 @@ def get_weather(query: str) -> str:
     Returns:
         A string with the simulated weather information for the queried location.
     """
+    logger.info(f"Getting weather for query: {query}")
     if "sf" in query.lower() or "san francisco" in query.lower():
         return "It's 60 degrees and foggy."
     return "It's 90 degrees and sunny."
@@ -47,11 +54,12 @@ def get_current_time(query: str) -> str:
     """Simulates getting the current time for a city.
 
     Args:
-        city: The name of the city to get the current time for.
+        query: The name of the city to get the current time for.
 
     Returns:
         A string with the current time information.
     """
+    logger.info(f"Getting current time for query: {query}")
     if "sf" in query.lower() or "san francisco" in query.lower():
         tz_identifier = "America/Los_Angeles"
     else:
@@ -64,10 +72,12 @@ def get_current_time(query: str) -> str:
 
 root_agent = Agent(
     name="root_agent",
-    model="gemini-3-pro-preview",
+    model="gemini-2.5-pro",
     instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
-    tools=[get_weather, get_current_time],
-    sub_agents=[ingestion_agent]
+    tools=[get_weather, get_current_time]
 )
 
+# Create ADK App - this automatically creates FastAPI app with SSE support
 app = App(root_agent=root_agent, name="app")
+
+logger.info("Agent application initialized successfully")

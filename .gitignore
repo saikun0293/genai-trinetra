@@ -42,3 +42,5 @@ local_settings.py # Consider ignoring sensitive local settings
 # Pipfile.lock
 # poetry.lock
 # requirements.txt (if dynamically generated)
+
+context/

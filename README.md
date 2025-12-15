@@ -1,12 +1,24 @@
 # genai-hackathon
 
+### Quick notes
+
 To use ADK command you need to activate virtual environment
+
 ```
 cd ~/genai-hackathon
 uv sync
 source .venv/bin/activate
 adk web
 ```
+
+Mention in your gemini prompts to use context/ if you wish, and you can store context files there. say adk-samples, adk-docs etc.
+
+### Running the app
+
+- frontend : `cd frontend && npm run dev`
+- backend : `uv run adk api_server . --port 8000`
+
+## About
 
 A base ReAct agent built with Google's Agent Development Kit (ADK)
 Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.28.2`
@@ -35,11 +47,11 @@ genai-hackathon/
 ## Requirements
 
 Before you begin, ensure you have:
+
 - **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
 - **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
 - **Terraform**: For infrastructure deployment - [Install](https://developer.hashicorp.com/terraform/downloads)
 - **make**: Build automation tool - [Install](https://www.gnu.org/software/make/) (pre-installed on most Unix-based systems)
-
 
 ## Quick Start (Local Testing)
 
@@ -48,26 +60,27 @@ Install required packages and launch the local development environment:
 ```bash
 make install && make playground
 ```
+
 > **📊 Observability Note:** Agent telemetry (Cloud Trace) is always enabled. Prompt-response logging (GCS, BigQuery, Cloud Logging) is **disabled** locally, **enabled by default** in deployed environments (metadata only - no prompts/responses). See [Monitoring and Observability](#monitoring-and-observability) for details.
 
 ## Commands
 
-| Command              | Description                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| `make install`       | Install all required dependencies using uv                                                  |
-| `make playground`    | Launch local development environment for testing agent |
-| `make deploy`        | Deploy agent to Agent Engine |
+| Command                           | Description                                                                                                                                         |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `make install`                    | Install all required dependencies using uv                                                                                                          |
+| `make playground`                 | Launch local development environment for testing agent                                                                                              |
+| `make deploy`                     | Deploy agent to Agent Engine                                                                                                                        |
 | `make register-gemini-enterprise` | Register deployed agent to Gemini Enterprise ([docs](https://googlecloudplatform.github.io/agent-starter-pack/cli/register_gemini_enterprise.html)) |
-| `make test`          | Run unit and integration tests                                                              |
-| `make lint`          | Run code quality checks (codespell, ruff, mypy)                                             |
-| `make setup-dev-env` | Set up development environment resources using Terraform                         |
+| `make test`                       | Run unit and integration tests                                                                                                                      |
+| `make lint`                       | Run code quality checks (codespell, ruff, mypy)                                                                                                     |
+| `make setup-dev-env`              | Set up development environment resources using Terraform                                                                                            |
 
 For full command options and usage, refer to the [Makefile](Makefile).
-
 
 ## Usage
 
 This template follows a "bring your own agent" approach - you focus on your business logic, and the template handles everything else (UI, infrastructure, deployment, monitoring).
+
 1. **Prototype:** Build your Generative AI Agent using the intro notebooks in `notebooks/` for guidance. Use Vertex AI Evaluation to assess performance.
 2. **Integrate:** Import your agent into the app by editing `app/agent.py`.
 3. **Test:** Explore your agent functionality using the local playground with `make playground`. The playground automatically reloads your agent on code changes.
@@ -75,7 +88,6 @@ This template follows a "bring your own agent" approach - you focus on your busi
 5. **Monitor:** Track performance and gather insights using BigQuery telemetry data, Cloud Logging, and Cloud Trace to iterate on your application.
 
 The project includes a `GEMINI.md` file that provides context for AI tools like Gemini CLI when asking questions about your template.
-
 
 ## Deployment
 
@@ -90,7 +102,6 @@ gcloud config set project <your-dev-project-id>
 make deploy
 ```
 
-
 The repository includes a Terraform configuration for the setup of the Dev Google Cloud project.
 See [deployment/README.md](deployment/README.md) for instructions.
 
@@ -103,16 +114,18 @@ The repository includes a Terraform configuration for the setup of a production 
 The application provides two levels of observability:
 
 **1. Agent Telemetry Events (Always Enabled)**
+
 - OpenTelemetry traces and spans exported to **Cloud Trace**
 - Tracks agent execution, latency, and system metrics
 
 **2. Prompt-Response Logging (Configurable)**
+
 - GenAI instrumentation captures LLM interactions (tokens, model, timing)
 - Exported to **Google Cloud Storage** (JSONL), **BigQuery** (external tables), and **Cloud Logging** (dedicated bucket)
 
-| Environment | Prompt-Response Logging |
-|-------------|-------------------------|
-| **Local Development** (`make playground`) | ❌ Disabled by default |
+| Environment                               | Prompt-Response Logging                                                             |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| **Local Development** (`make playground`) | ❌ Disabled by default                                                              |
 | **Deployed Environments** (via Terraform) | ✅ **Enabled by default** (privacy-preserving: metadata only, no prompts/responses) |
 
 **To enable locally:** Set `LOGS_BUCKET_NAME` and `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=NO_CONTENT`.

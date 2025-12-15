@@ -1,12 +1,10 @@
+import Card from "@mui/material/Card"
+import CardContent from "@mui/material/CardContent"
+import Box from "@mui/material/Box"
+import Typography from "@mui/material/Typography"
+import Chip from "@mui/material/Chip"
+import CircularProgress from "@mui/material/CircularProgress"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-} from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Loader2,
   Activity,
   Info,
   Search,
@@ -15,177 +13,280 @@ import {
   Pen,
   ChevronDown,
   ChevronUp,
-  Link,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
+  Link
+} from "lucide-react"
+import { useEffect, useState } from "react"
+import ReactMarkdown from "react-markdown"
 
 export interface ProcessedEvent {
-  title: string;
-  data: any;
+  title: string
+  data: any
 }
 
 interface ActivityTimelineProps {
-  processedEvents: ProcessedEvent[];
-  isLoading: boolean;
-  websiteCount: number;
+  processedEvents: ProcessedEvent[]
+  isLoading: boolean
+  websiteCount: number
 }
 
 export function ActivityTimeline({
   processedEvents,
   isLoading,
-  websiteCount,
+  websiteCount
 }: ActivityTimelineProps) {
-  const [isTimelineCollapsed, setIsTimelineCollapsed] =
-    useState<boolean>(false);
+  const [isTimelineCollapsed, setIsTimelineCollapsed] = useState<boolean>(false)
 
   const formatEventData = (data: any): string => {
-    // Handle new structured data types
     if (typeof data === "object" && data !== null && data.type) {
       switch (data.type) {
-        case 'functionCall':
-          return `Calling function: ${data.name}\nArguments: ${JSON.stringify(data.args, null, 2)}`;
-        case 'functionResponse':
-          return `Function ${data.name} response:\n${JSON.stringify(data.response, null, 2)}`;
-        case 'text':
-          return data.content;
-        case 'sources':
-          const sources = data.content as Record<string, { title: string; url: string }>;
+        case "functionCall":
+          return `Calling function: ${data.name}\nArguments: ${JSON.stringify(
+            data.args,
+            null,
+            2
+          )}`
+        case "functionResponse":
+          return `Function ${data.name} response:\n${JSON.stringify(
+            data.response,
+            null,
+            2
+          )}`
+        case "text":
+          return data.content
+        case "sources":
+          const sources = data.content as Record<
+            string,
+            { title: string; url: string }
+          >
           if (Object.keys(sources).length === 0) {
-            return "No sources found.";
+            return "No sources found."
           }
           return Object.values(sources)
-            .map(source => `[${source.title || 'Untitled Source'}](${source.url})`).join(', ');
+            .map(
+              (source) =>
+                `[${source.title || "Untitled Source"}](${source.url})`
+            )
+            .join(", ")
         default:
-          return JSON.stringify(data, null, 2);
+          return JSON.stringify(data, null, 2)
       }
     }
-    
-    // Existing logic for backward compatibility
+
     if (typeof data === "string") {
-      // Try to parse as JSON first
       try {
-        const parsed = JSON.parse(data);
-        return JSON.stringify(parsed, null, 2);
+        const parsed = JSON.parse(data)
+        return JSON.stringify(parsed, null, 2)
       } catch {
-        // If not JSON, return as string (could be markdown)
-        return data;
+        return data
       }
     } else if (Array.isArray(data)) {
-      return data.join(", ");
+      return data.join(", ")
     } else if (typeof data === "object" && data !== null) {
-      return JSON.stringify(data, null, 2);
+      return JSON.stringify(data, null, 2)
     }
-    return String(data);
-  };
+    return String(data)
+  }
 
   const isJsonData = (data: any): boolean => {
-    // Handle new structured data types
     if (typeof data === "object" && data !== null && data.type) {
-      if (data.type === 'sources') {
-        return false; // Let ReactMarkdown handle this
+      if (data.type === "sources") {
+        return false
       }
-      return data.type === 'functionCall' || data.type === 'functionResponse';
+      return data.type === "functionCall" || data.type === "functionResponse"
     }
-    
-    // Existing logic
+
     if (typeof data === "string") {
       try {
-        JSON.parse(data);
-        return true;
+        JSON.parse(data)
+        return true
       } catch {
-        return false;
+        return false
       }
     }
-    return typeof data === "object" && data !== null;
-  };
+    return typeof data === "object" && data !== null
+  }
+
   const getEventIcon = (title: string, index: number) => {
     if (index === 0 && isLoading && processedEvents.length === 0) {
-      return <Loader2 className="h-4 w-4 text-neutral-400 animate-spin" />;
+      return <CircularProgress size={16} sx={{ color: "text.secondary" }} />
     }
     if (title.toLowerCase().includes("function call")) {
-      return <Activity className="h-4 w-4 text-blue-400" />;
+      return <Activity size={16} color="#60a5fa" />
     } else if (title.toLowerCase().includes("function response")) {
-      return <Activity className="h-4 w-4 text-green-400" />;
+      return <Activity size={16} color="#4ade80" />
     } else if (title.toLowerCase().includes("generating")) {
-      return <TextSearch className="h-4 w-4 text-neutral-400" />;
+      return <TextSearch size={16} color="#9ca3af" />
     } else if (title.toLowerCase().includes("thinking")) {
-      return <Loader2 className="h-4 w-4 text-neutral-400 animate-spin" />;
+      return <CircularProgress size={16} sx={{ color: "text.secondary" }} />
     } else if (title.toLowerCase().includes("reflection")) {
-      return <Brain className="h-4 w-4 text-neutral-400" />;
+      return <Brain size={16} color="#9ca3af" />
     } else if (title.toLowerCase().includes("research")) {
-      return <Search className="h-4 w-4 text-neutral-400" />;
+      return <Search size={16} color="#9ca3af" />
     } else if (title.toLowerCase().includes("finalizing")) {
-      return <Pen className="h-4 w-4 text-neutral-400" />;
+      return <Pen size={16} color="#9ca3af" />
     } else if (title.toLowerCase().includes("retrieved sources")) {
-      return <Link className="h-4 w-4 text-yellow-400" />;
+      return <Link size={16} color="#fbbf24" />
     }
-    return <Activity className="h-4 w-4 text-neutral-400" />;
-  };
+    return <Activity size={16} color="#9ca3af" />
+  }
 
   useEffect(() => {
     if (!isLoading && processedEvents.length !== 0) {
-      setIsTimelineCollapsed(true);
+      setIsTimelineCollapsed(true)
     }
-  }, [isLoading, processedEvents]);
+  }, [isLoading, processedEvents])
+
   return (
-    <Card className={`border-none rounded-lg bg-neutral-700 ${isTimelineCollapsed ? "h-10 py-2" : "max-h-96 py-2"}`}>
-      <CardHeader className="py-0">
-        <CardDescription className="flex items-center justify-between">
-          <div
-            className="flex items-center justify-start text-sm w-full cursor-pointer gap-2 text-neutral-100"
-            onClick={() => setIsTimelineCollapsed(!isTimelineCollapsed)}
-          >
-            <span>Research</span>
-            {websiteCount > 0 && (
-              <span className="text-xs bg-neutral-600 px-2 py-0.5 rounded-full">
-                {websiteCount} websites
-              </span>
-            )}
-            {isTimelineCollapsed ? (
-              <ChevronDown className="h-4 w-4 mr-2" />
-            ) : (
-              <ChevronUp className="h-4 w-4 mr-2" />
-            )}
-          </div>
-        </CardDescription>
-      </CardHeader>
+    <Card
+      sx={{
+        border: "none",
+        borderRadius: 2,
+        backgroundColor: "rgba(64, 64, 64, 0.8)",
+        height: isTimelineCollapsed ? 48 : "auto",
+        maxHeight: isTimelineCollapsed ? 48 : 500,
+        py: 1
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 2,
+          py: 0.5,
+          cursor: "pointer"
+        }}
+        onClick={() => setIsTimelineCollapsed(!isTimelineCollapsed)}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            Research
+          </Typography>
+          {websiteCount > 0 && (
+            <Chip
+              label={`${websiteCount} websites`}
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: "0.7rem",
+                backgroundColor: "rgba(82, 82, 82, 0.8)"
+              }}
+            />
+          )}
+        </Box>
+        {isTimelineCollapsed ? (
+          <ChevronDown size={16} />
+        ) : (
+          <ChevronUp size={16} />
+        )}
+      </Box>
       {!isTimelineCollapsed && (
-        <ScrollArea className="max-h-80 overflow-y-auto">
-          <CardContent>
+        <Box sx={{ maxHeight: 400, overflowY: "auto", px: 2, pb: 1 }}>
+          <CardContent sx={{ p: 0 }}>
             {isLoading && processedEvents.length === 0 && (
-              <div className="relative pl-8 pb-4">
-                <div className="absolute left-3 top-3.5 h-full w-0.5 bg-neutral-800" />
-                <div className="absolute left-0.5 top-2 h-5 w-5 rounded-full bg-neutral-800 flex items-center justify-center ring-4 ring-neutral-900">
-                  <Loader2 className="h-3 w-3 text-neutral-400 animate-spin" />
-                </div>
-                <div>
-                  <p className="text-sm text-neutral-300 font-medium">
-                    Thinking...
-                  </p>
-                </div>
-              </div>
+              <Box sx={{ position: "relative", pl: 4, pb: 2 }}>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    left: 12,
+                    top: 14,
+                    height: "100%",
+                    width: 2,
+                    backgroundColor: "rgba(38, 38, 38, 0.8)"
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: "absolute",
+                    left: 2,
+                    top: 8,
+                    height: 20,
+                    width: 20,
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(38, 38, 38, 0.8)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "4px solid",
+                    borderColor: "rgba(23, 23, 23, 0.9)"
+                  }}
+                >
+                  <CircularProgress
+                    size={12}
+                    sx={{ color: "text.secondary" }}
+                  />
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 500, color: "text.primary" }}
+                >
+                  Thinking...
+                </Typography>
+              </Box>
             )}
             {processedEvents.length > 0 ? (
-              <div className="space-y-0">
+              <Box>
                 {processedEvents.map((eventItem, index) => (
-                  <div key={index} className="relative pl-8 pb-4">
-                    {index < processedEvents.length - 1 ||
-                    (isLoading && index === processedEvents.length - 1) ? (
-                      <div className="absolute left-3 top-3.5 h-full w-0.5 bg-neutral-600" />
-                    ) : null}
-                    <div className="absolute left-0.5 top-2 h-6 w-6 rounded-full bg-neutral-600 flex items-center justify-center ring-4 ring-neutral-700">
+                  <Box key={index} sx={{ position: "relative", pl: 4, pb: 2 }}>
+                    {(index < processedEvents.length - 1 ||
+                      (isLoading && index === processedEvents.length - 1)) && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          left: 12,
+                          top: 14,
+                          height: "100%",
+                          width: 2,
+                          backgroundColor: "rgba(82, 82, 82, 0.8)"
+                        }}
+                      />
+                    )}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        left: 2,
+                        top: 8,
+                        height: 24,
+                        width: 24,
+                        borderRadius: "50%",
+                        backgroundColor: "rgba(82, 82, 82, 0.8)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "4px solid",
+                        borderColor: "rgba(64, 64, 64, 0.8)"
+                      }}
+                    >
                       {getEventIcon(eventItem.title, index)}
-                    </div>
-                    <div>
-                      <p className="text-sm text-neutral-200 font-medium mb-0.5">
+                    </Box>
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 500, mb: 0.5, color: "text.primary" }}
+                      >
                         {eventItem.title}
-                      </p>
-                      <div className="text-xs text-neutral-300 leading-relaxed">
+                      </Typography>
+                      <Box
+                        sx={{
+                          fontSize: "0.75rem",
+                          color: "text.secondary",
+                          lineHeight: 1.5
+                        }}
+                      >
                         {isJsonData(eventItem.data) ? (
-                          <pre className="bg-neutral-800 p-2 rounded text-xs overflow-x-auto whitespace-pre-wrap">
+                          <Box
+                            component="pre"
+                            sx={{
+                              backgroundColor: "rgba(38, 38, 38, 0.8)",
+                              p: 1,
+                              borderRadius: 1,
+                              fontSize: "0.75rem",
+                              overflowX: "auto",
+                              whiteSpace: "pre-wrap"
+                            }}
+                          >
                             {formatEventData(eventItem.data)}
-                          </pre>
+                          </Box>
                         ) : (
                           <ReactMarkdown
                             components={{
@@ -195,50 +296,92 @@ export function ActivityTimeline({
                                   href={href}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-blue-400 hover:text-blue-300 underline"
+                                  style={{
+                                    color: "#60a5fa",
+                                    textDecoration: "underline"
+                                  }}
                                 >
                                   {children}
                                 </a>
                               ),
                               code: ({ children }) => (
-                                <code className="bg-neutral-800 px-1 py-0.5 rounded text-xs">
+                                <code
+                                  style={{
+                                    backgroundColor: "rgba(38, 38, 38, 0.8)",
+                                    padding: "2px 4px",
+                                    borderRadius: 4,
+                                    fontSize: "0.75rem"
+                                  }}
+                                >
                                   {children}
                                 </code>
-                              ),
+                              )
                             }}
                           >
                             {formatEventData(eventItem.data)}
                           </ReactMarkdown>
                         )}
-                      </div>
-                    </div>
-                  </div>
+                      </Box>
+                    </Box>
+                  </Box>
                 ))}
                 {isLoading && processedEvents.length > 0 && (
-                  <div className="relative pl-8 pb-4">
-                    <div className="absolute left-0.5 top-2 h-5 w-5 rounded-full bg-neutral-600 flex items-center justify-center ring-4 ring-neutral-700">
-                      <Loader2 className="h-3 w-3 text-neutral-400 animate-spin" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-neutral-300 font-medium">
-                        Thinking...
-                      </p>
-                    </div>
-                  </div>
+                  <Box sx={{ position: "relative", pl: 4, pb: 2 }}>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        left: 2,
+                        top: 8,
+                        height: 20,
+                        width: 20,
+                        borderRadius: "50%",
+                        backgroundColor: "rgba(82, 82, 82, 0.8)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "4px solid",
+                        borderColor: "rgba(64, 64, 64, 0.8)"
+                      }}
+                    >
+                      <CircularProgress
+                        size={12}
+                        sx={{ color: "text.secondary" }}
+                      />
+                    </Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 500, color: "text.primary" }}
+                    >
+                      Thinking...
+                    </Typography>
+                  </Box>
                 )}
-              </div>
-            ) : !isLoading ? ( // Only show "No activity" if not loading and no events
-              <div className="flex flex-col items-center justify-center h-full text-neutral-500 pt-10">
-                <Info className="h-6 w-6 mb-3" />
-                <p className="text-sm">No activity to display.</p>
-                <p className="text-xs text-neutral-600 mt-1">
+              </Box>
+            ) : !isLoading ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  color: "text.disabled",
+                  pt: 5
+                }}
+              >
+                <Info size={24} style={{ marginBottom: 12 }} />
+                <Typography variant="body2">No activity to display.</Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "text.disabled", mt: 0.5 }}
+                >
                   Timeline will update during processing.
-                </p>
-              </div>
+                </Typography>
+              </Box>
             ) : null}
           </CardContent>
-        </ScrollArea>
+        </Box>
       )}
     </Card>
-  );
+  )
 }

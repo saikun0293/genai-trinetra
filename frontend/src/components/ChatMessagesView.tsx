@@ -1,15 +1,18 @@
 import type React from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Loader2, Copy, CopyCheck } from "lucide-react"
+import Box from "@mui/material/Box"
+import Button from "@mui/material/Button"
+import IconButton from "@mui/material/IconButton"
+import Typography from "@mui/material/Typography"
+import Chip from "@mui/material/Chip"
+import Link from "@mui/material/Link"
+import CircularProgress from "@mui/material/CircularProgress"
+import { Copy, CopyCheck } from "lucide-react"
 import { InputForm } from "@/components/InputForm"
-import { Button } from "@/components/ui/button"
 import { useState, ReactNode } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { cn } from "@/utils"
-import { Badge } from "@/components/ui/badge"
 import { ActivityTimeline } from "@/components/ActivityTimeline"
-import Link from "@mui/material/Link"
 
 // Markdown component props type from former ReportView
 type MdComponentProps = {
@@ -46,20 +49,27 @@ const mdComponents = {
     </p>
   ),
   a: ({ className, children, href, ...props }: MdComponentProps) => (
-    <Badge
-      variant="default"
+    <Chip
+      size="small"
       label={
         <Link
-          className={cn("text-blue-400 hover:text-blue-300 text-xs", className)}
+          className={cn("text-xs", className)}
           href={href}
           target="_blank"
           rel="noopener noreferrer"
           underline="hover"
+          sx={{ color: "inherit" }}
           {...props}
         >
           {children}
         </Link>
       }
+      sx={{
+        backgroundColor: "primary.main",
+        color: "primary.contrastText",
+        height: "auto",
+        "& .MuiChip-label": { padding: "2px 8px" }
+      }}
     />
   ),
   ul: ({ className, children, ...props }: MdComponentProps) => (
@@ -153,11 +163,24 @@ const HumanMessageBubble: React.FC<HumanMessageBubbleProps> = ({
   mdComponents
 }) => {
   return (
-    <div className="text-white rounded-3xl break-words min-h-7 bg-neutral-700 max-w-[100%] sm:max-w-[90%] px-4 pt-3 rounded-br-lg">
+    <Box
+      sx={{
+        color: "white",
+        borderRadius: 3,
+        wordBreak: "break-word",
+        minHeight: 28,
+        backgroundColor: "rgba(82, 82, 82, 0.9)",
+        maxWidth: { xs: "100%", sm: "90%" },
+        px: 3,
+        pt: 2,
+        pb: 1,
+        borderBottomRightRadius: 1
+      }}
+    >
       <ReactMarkdown components={mdComponents} remarkPlugins={[remarkGfm]}>
         {message.content}
       </ReactMarkdown>
-    </div>
+    </Box>
   )
 }
 
@@ -195,104 +218,146 @@ const AiMessageBubble: React.FC<AiMessageBubbleProps> = ({
     (agent === "report_composer_with_citations" && finalReportWithCitations)
 
   if (shouldDisplayDirectly) {
-    // Direct display - show content with copy button, and timeline if available
     return (
-      <div className="relative break-words flex flex-col w-full">
-        {/* Show timeline for interactive_planner_agent if available */}
+      <Box
+        sx={{
+          position: "relative",
+          wordBreak: "break-word",
+          display: "flex",
+          flexDirection: "column",
+          width: "100%"
+        }}
+      >
         {shouldShowTimeline && agent === "interactive_planner_agent" && (
-          <div className="w-full mb-2">
+          <Box sx={{ width: "100%", mb: 2 }}>
             <ActivityTimeline
               processedEvents={processedEvents}
               isLoading={isLoading}
               websiteCount={websiteCount}
             />
-          </div>
+          </Box>
         )}
-        <div className="flex items-start gap-3">
-          <div className="flex-1">
+        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
             <ReactMarkdown
               components={mdComponents}
               remarkPlugins={[remarkGfm]}
             >
               {message.content}
             </ReactMarkdown>
-          </div>
-          <button
+          </Box>
+          <IconButton
+            size="small"
             onClick={() => handleCopy(message.content, message.id)}
-            className="p-1 hover:bg-neutral-700 rounded"
+            sx={{
+              color:
+                copiedMessageId === message.id
+                  ? "success.main"
+                  : "text.secondary",
+              "&:hover": { backgroundColor: "action.hover" }
+            }}
           >
             {copiedMessageId === message.id ? (
-              <CopyCheck className="h-4 w-4 text-green-500" />
+              <CopyCheck size={16} />
             ) : (
-              <Copy className="h-4 w-4 text-neutral-400" />
+              <Copy size={16} />
             )}
-          </button>
-        </div>
-      </div>
+          </IconButton>
+        </Box>
+      </Box>
     )
   } else if (shouldShowTimeline) {
-    // First AI message with timeline only (no direct content display)
     return (
-      <div className="relative break-words flex flex-col w-full">
-        <div className="w-full">
+      <Box
+        sx={{
+          position: "relative",
+          wordBreak: "break-word",
+          display: "flex",
+          flexDirection: "column",
+          width: "100%"
+        }}
+      >
+        <Box sx={{ width: "100%" }}>
           <ActivityTimeline
             processedEvents={processedEvents}
             isLoading={isLoading}
             websiteCount={websiteCount}
           />
-        </div>
-        {/* Only show accumulated content if it's not empty and not from research agents */}
+        </Box>
         {message.content &&
           message.content.trim() &&
           agent !== "interactive_planner_agent" && (
-            <div className="flex items-start gap-3 mt-2">
-              <div className="flex-1">
+            <Box
+              sx={{ display: "flex", alignItems: "flex-start", gap: 2, mt: 2 }}
+            >
+              <Box sx={{ flex: 1 }}>
                 <ReactMarkdown
                   components={mdComponents}
                   remarkPlugins={[remarkGfm]}
                 >
                   {message.content}
                 </ReactMarkdown>
-              </div>
-              <button
+              </Box>
+              <IconButton
+                size="small"
                 onClick={() => handleCopy(message.content, message.id)}
-                className="p-1 hover:bg-neutral-700 rounded"
+                sx={{
+                  color:
+                    copiedMessageId === message.id
+                      ? "success.main"
+                      : "text.secondary",
+                  "&:hover": { backgroundColor: "action.hover" }
+                }}
               >
                 {copiedMessageId === message.id ? (
-                  <CopyCheck className="h-4 w-4 text-green-500" />
+                  <CopyCheck size={16} />
                 ) : (
-                  <Copy className="h-4 w-4 text-neutral-400" />
+                  <Copy size={16} />
                 )}
-              </button>
-            </div>
+              </IconButton>
+            </Box>
           )}
-      </div>
+      </Box>
     )
   } else {
-    // Fallback for other messages - just show content
     return (
-      <div className="relative break-words flex flex-col w-full">
-        <div className="flex items-start gap-3">
-          <div className="flex-1">
+      <Box
+        sx={{
+          position: "relative",
+          wordBreak: "break-word",
+          display: "flex",
+          flexDirection: "column",
+          width: "100%"
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
             <ReactMarkdown
               components={mdComponents}
               remarkPlugins={[remarkGfm]}
             >
               {message.content}
             </ReactMarkdown>
-          </div>
-          <button
+          </Box>
+          <IconButton
+            size="small"
             onClick={() => handleCopy(message.content, message.id)}
-            className="p-1 hover:bg-neutral-700 rounded"
+            sx={{
+              color:
+                copiedMessageId === message.id
+                  ? "success.main"
+                  : "text.secondary",
+              "&:hover": { backgroundColor: "action.hover" }
+            }}
           >
             {copiedMessageId === message.id ? (
-              <CopyCheck className="h-4 w-4 text-green-500" />
+              <CopyCheck size={16} />
             ) : (
-              <Copy className="h-4 w-4 text-neutral-400" />
+              <Copy size={16} />
             )}
-          </button>
-        </div>
-      </div>
+          </IconButton>
+        </Box>
+      </Box>
     )
   }
 }
@@ -347,38 +412,87 @@ export function ChatMessagesView({
   const lastAiMessageId = lastAiMessage?.id
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        width: "100%"
+      }}
+    >
       {/* Header with New Chat button */}
-      <div className="border-b border-neutral-700 p-4 bg-neutral-800">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <h1 className="text-lg font-semibold text-neutral-100">Chat</h1>
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: "divider",
+          p: 2,
+          backgroundColor: "background.paper"
+        }}
+      >
+        <Box
+          sx={{
+            maxWidth: 1200,
+            mx: "auto",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}
+        >
+          <Typography variant="h6" component="h1" sx={{ fontWeight: 600 }}>
+            Chat
+          </Typography>
           <Button
             onClick={handleNewChat}
             variant="outlined"
-            className="bg-neutral-700 hover:bg-neutral-600 text-neutral-100 border-neutral-600 hover:border-neutral-500"
+            sx={{ textTransform: "none" }}
           >
             New Chat
           </Button>
-        </div>
-      </div>
-      <div className="flex-1 flex flex-col w-full">
-        <ScrollArea ref={scrollAreaRef} className="flex-1 w-full">
-          <div className="p-4 md:p-6 space-y-2 max-w-4xl mx-auto">
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          overflow: "hidden"
+        }}
+      >
+        <Box
+          ref={scrollAreaRef}
+          sx={{
+            flex: 1,
+            width: "100%",
+            overflowY: "auto",
+            overflowX: "hidden"
+          }}
+        >
+          <Box
+            sx={{
+              p: { xs: 2, md: 3 },
+              maxWidth: 1200,
+              mx: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2
+            }}
+          >
             {messages.map((message) => {
-              // Removed index as it's not directly used for this logic
               const eventsForMessage =
                 message.type === "ai" ? messageEvents.get(message.id) || [] : []
 
-              // Determine if the current AI message is the last one
               const isCurrentMessageTheLastAiMessage =
                 message.type === "ai" && message.id === lastAiMessageId
 
               return (
-                <div
+                <Box
                   key={message.id}
-                  className={`flex ${
-                    message.type === "human" ? "justify-end" : "justify-start"
-                  }`}
+                  sx={{
+                    display: "flex",
+                    justifyContent:
+                      message.type === "human" ? "flex-end" : "flex-start"
+                  }}
                 >
                   {message.type === "human" ? (
                     <HumanMessageBubble
@@ -396,65 +510,84 @@ export function ChatMessagesView({
                         message.finalReportWithCitations
                       }
                       processedEvents={eventsForMessage}
-                      // MODIFIED: Pass websiteCount only if it's the last AI message
                       websiteCount={
                         isCurrentMessageTheLastAiMessage ? websiteCount : 0
                       }
-                      // MODIFIED: Pass isLoading only if it's the last AI message and global isLoading is true
                       isLoading={isCurrentMessageTheLastAiMessage && isLoading}
                     />
                   )}
-                </div>
+                </Box>
               )
             })}
-            {/* This global "Thinking..." indicator appears below all messages if isLoading is true */}
-            {/* It's independent of the per-timeline isLoading state */}
             {isLoading &&
               !lastAiMessage &&
               messages.some((m) => m.type === "human") && (
-                <div className="flex justify-start">
-                  <div className="flex items-center gap-2 text-neutral-400">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Thinking...</span>
-                  </div>
-                </div>
+                <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      color: "text.secondary"
+                    }}
+                  >
+                    <CircularProgress size={16} />
+                    <Typography variant="body2">Thinking...</Typography>
+                  </Box>
+                </Box>
               )}
-            {/* Show "Thinking..." if the last message is human and we are loading, 
-                 or if there's an active AI message that is the last one and we are loading.
-                 The AiMessageBubble's internal isLoading will handle its own spinner.
-                 This one is for the general loading state at the bottom.
-             */}
             {isLoading &&
               messages.length > 0 &&
               messages[messages.length - 1].type === "human" && (
-                <div className="flex justify-start pl-10 pt-2">
-                  {" "}
-                  {/* Adjusted padding to align similarly to AI bubble */}
-                  <div className="flex items-center gap-2 text-neutral-400">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Thinking...</span>
-                  </div>
-                </div>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-start",
+                    pl: 2,
+                    pt: 1
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      color: "text.secondary"
+                    }}
+                  >
+                    <CircularProgress size={16} />
+                    <Typography variant="body2">Thinking...</Typography>
+                  </Box>
+                </Box>
               )}
-          </div>
-        </ScrollArea>
-      </div>
-      <div className="border-t border-neutral-700 p-4 w-full">
-        <div className="max-w-3xl mx-auto">
+          </Box>
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          borderTop: 1,
+          borderColor: "divider",
+          p: 2,
+          width: "100%",
+          backgroundColor: "background.paper"
+        }}
+      >
+        <Box sx={{ maxWidth: 900, mx: "auto" }}>
           <InputForm onSubmit={onSubmit} isLoading={isLoading} context="chat" />
           {isLoading && (
-            <div className="mt-4 flex justify-center">
+            <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
               <Button
                 variant="outlined"
+                color="error"
                 onClick={onCancel}
-                className="text-red-400 hover:text-red-300"
+                sx={{ textTransform: "none" }}
               >
                 Cancel
               </Button>
-            </div>
+            </Box>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   )
 }

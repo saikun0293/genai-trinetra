@@ -1,4 +1,7 @@
-import { Button } from "@/components/ui/button"
+import Box from "@mui/material/Box"
+import Button from "@mui/material/Button"
+import Typography from "@mui/material/Typography"
+import Paper from "@mui/material/Paper"
 import { InputForm } from "@/components/InputForm"
 
 interface WelcomeScreenProps {
@@ -13,48 +16,80 @@ export function WelcomeScreen({
   onCancel
 }: WelcomeScreenProps) {
   return (
-    // This container fills the space provided by its parent layout (e.g., the left panel in a split view)
-    // and centers its content (the card) within itself.
-    <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-hidden relative">
-      {/* The "Card" Container */}
-      {/* This div now holds the card's styling: background, blur, padding, border, shadow, and hover effect */}
-      <div
-        className="w-full max-w-2xl z-10
-                      bg-neutral-900/50 backdrop-blur-md 
-                      p-8 rounded-2xl border border-neutral-700 
-                      shadow-2xl shadow-black/60 
-                      transition-all duration-300 hover:border-neutral-600"
+    <Box
+      sx={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        p: 4,
+        overflow: "hidden",
+        position: "relative"
+      }}
+    >
+      <Paper
+        elevation={24}
+        sx={{
+          width: "100%",
+          maxWidth: 800,
+          p: 6,
+          backdropFilter: "blur(10px)",
+          backgroundColor: "rgba(18, 18, 18, 0.8)",
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 3,
+          transition: "all 0.3s ease-in-out",
+          "&:hover": {
+            borderColor: "primary.main",
+            boxShadow: 24
+          }
+        }}
       >
-        {/* Header section of the card */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-white flex items-center justify-center gap-3">
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          <Typography
+            variant="h3"
+            component="h1"
+            gutterBottom
+            sx={{
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 2
+            }}
+          >
             ✨ Deep Search - ADK 🚀
-          </h1>
-          <p className="text-lg text-neutral-300 max-w-md mx-auto">
+          </Typography>
+          <Typography
+            variant="h6"
+            color="text.secondary"
+            sx={{ maxWidth: 600, mx: "auto" }}
+          >
             Turns your questions into comprehensive reports!
-          </p>
-        </div>
+          </Typography>
+        </Box>
 
-        {/* Input form section of the card */}
-        <div className="mt-8">
+        <Box sx={{ mt: 4 }}>
           <InputForm
             onSubmit={handleSubmit}
             isLoading={isLoading}
             context="homepage"
           />
           {isLoading && (
-            <div className="mt-4 flex justify-center">
+            <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
               <Button
                 variant="outlined"
+                color="error"
                 onClick={onCancel}
-                className="text-red-400 hover:text-red-300 hover:bg-red-900/20 border-red-700/50" // Enhanced cancel button
+                sx={{ textTransform: "none" }}
               >
                 Cancel
               </Button>
-            </div>
+            </Box>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Paper>
+    </Box>
   )
 }

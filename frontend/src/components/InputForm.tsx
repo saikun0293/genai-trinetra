@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Loader2, Send } from "lucide-react"
+import Box from "@mui/material/Box"
+import TextField from "@mui/material/TextField"
+import IconButton from "@mui/material/IconButton"
+import CircularProgress from "@mui/material/CircularProgress"
+import { Send } from "lucide-react"
 
 interface InputFormProps {
   onSubmit: (query: string) => void
   isLoading: boolean
-  context?: "homepage" | "chat" // Add new context prop
+  context?: "homepage" | "chat"
 }
 
 export function InputForm({
@@ -44,31 +46,51 @@ export function InputForm({
       : "Ask me anything... e.g., A report on the latest Google I/O"
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <div className="flex items-end space-x-2">
-        <Textarea
-          inputRef={textareaRef}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholderText}
-          multiline
-          minRows={1}
-          maxRows={6}
-          sx={{ flexGrow: 1 }}
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={isLoading || !inputValue.trim()}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
-    </form>
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{ display: "flex", gap: 1, alignItems: "flex-end" }}
+    >
+      <TextField
+        inputRef={textareaRef}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholderText}
+        multiline
+        minRows={1}
+        maxRows={6}
+        fullWidth
+        variant="outlined"
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "background.paper"
+          }
+        }}
+      />
+      <IconButton
+        type="submit"
+        color="primary"
+        disabled={isLoading || !inputValue.trim()}
+        sx={{
+          width: 48,
+          height: 48,
+          backgroundColor: "primary.main",
+          color: "primary.contrastText",
+          "&:hover": {
+            backgroundColor: "primary.dark"
+          },
+          "&:disabled": {
+            backgroundColor: "action.disabledBackground"
+          }
+        }}
+      >
+        {isLoading ? (
+          <CircularProgress size={20} color="inherit" />
+        ) : (
+          <Send size={20} />
+        )}
+      </IconButton>
+    </Box>
   )
 }

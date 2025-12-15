@@ -5,8 +5,8 @@ from google.adk.tools.tool_context import ToolContext
 from app.sub_agents.bigquery_agent import bigquery_agent
 
 # Main Payer Anomaly Detection Agent
-root_agent = Agent(
-    name="root_agent",
+payer_validation_agent = Agent(
+    name="payer_validation_agent",
     model="gemini-2.0-flash",
     description="Banking fraud detection agent specialized in payer transaction anomaly detection",
     instruction="""
@@ -212,6 +212,7 @@ root_agent = Agent(
     
     Focus on QUALITY DATA PRESENTATION that enables others to make informed decisions.
     """,
+    output_key="payer_validation_agent",
     tools=[
         AgentTool(bigquery_agent, skip_summarization=False)
     ]

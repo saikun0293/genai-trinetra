@@ -1,1 +1,1 @@
-from . import agent
+from .agent import geopolitics_agent

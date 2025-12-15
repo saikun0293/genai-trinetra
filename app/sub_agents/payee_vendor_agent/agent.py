@@ -12,7 +12,7 @@ from google.adk.tools.agent_tool import AgentTool
 import os
 
 # Payee-Vendor Relationship Analysis Agent
-root_agent = Agent(
+payee_agent = Agent(
     name="payee_vendor_agent",
     model="gemini-2.0-flash",
     description=(
@@ -351,5 +351,6 @@ Your output enables downstream Investigation teams to:
 Focus on COMPREHENSIVE FRAUD PATTERN DETECTION that surfaces all anomalies and suspicious behaviors 
 for further investigation.
 """,
+output_key = "payee_agent",
     tools=[AgentTool(bigquery_agent)]
 )

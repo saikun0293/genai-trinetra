@@ -12,7 +12,8 @@ geopolitics_agent = LlmAgent(
     description='Analyzes transaction compliance based on geopolitical factors, payment methods, timing, and purpose using real-time information.',
     instruction=GEOPOLITICS_AGENT_PROMPT,
     tools=[google_search],
-    output_key='geopolitics.agent'
+    output_key='geopolitics_agent',  # Fixed: removed dot, use underscore
+    include_contents=False  # Don't respond to user directly, only write to state
 )
 
 logger.info("Geopolitics compliance agent initialized successfully")

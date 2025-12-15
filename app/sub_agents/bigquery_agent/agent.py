@@ -3,11 +3,18 @@ from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
 from google.adk.tools.bigquery.config import BigQueryToolConfig
 from google.adk.tools.bigquery.config import WriteMode
 import os
+import logging
 import google.auth
 from dotenv import load_dotenv
 from google.adk.agents.callback_context import CallbackContext
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 load_dotenv()
+
+logger.info("Initializing BigQuery agent...")
 
 toolconfig = BigQueryToolConfig(write_mode = WriteMode.BLOCKED)
 credentials,_ = google.auth.default()
@@ -15,17 +22,19 @@ credentials_config = BigQueryCredentialsConfig(credentials = credentials)
 
 bigquery_toolset = BigQueryToolset(credentials_config=credentials_config,bigquery_tool_config=toolconfig)
 
+logger.info("BigQuery toolset initialized successfully")
+
 database_settings = None
 
 
 def setup_before_agent_call(callback_context: CallbackContext) -> None:
     """Setup the agent."""
-
-    print("Setting up agent...")
+    logger.info("Setting up BigQuery agent callback...")
     if "database_settings" not in callback_context.state:
         callback_context.state["database_settings"] = (
             get_database_settings()
         )
+    logger.info("BigQuery agent callback setup complete")
 
 
 def get_database_settings():
@@ -37,14 +46,14 @@ def get_database_settings():
 
 
 def update_database_settings():
-    print("Setting up agent...")
     """Update database settings."""
+    logger.info(f"Updating database settings for project: {os.getenv('GOOGLE_CLOUD_PROJECT')}")
     global database_settings
-    print("Updating database settings...",os.getenv("GOOGLE_CLOUD_PROJECT"))
     database_settings = {
         "project_id": os.getenv("GOOGLE_CLOUD_PROJECT"),
         "dataset_id": os.getenv("BQ_DATASET_ID"),
     }
+    logger.info(f"Database settings updated: project={database_settings['project_id']}, dataset={database_settings['dataset_id']}")
     return database_settings
 
 # BigQuery NL-to-SQL Agent
@@ -90,5 +99,7 @@ bigquery_agent = LlmAgent(
     Always parameterize queries for safety when filtering by specific IDs.
     """,
     before_agent_callback= setup_before_agent_call,
-    tools=[bigquery_toolset]  # In production, you'd add actual BigQuery execution tool here
+    tools=[bigquery_toolset]
 )
+
+logger.info("BigQuery agent initialized successfully")

@@ -5,6 +5,8 @@ from google.adk.apps.app import App
 from google.adk.agents import LlmAgent
 from google.cloud import bigquery
 from google.adk.tools import FunctionTool
+from .prompt import TRANSACTION_AGENT_PROMPT
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -53,8 +55,11 @@ transaction_agent = LlmAgent(
     # Provide a default model to prevent errors if the env var is not set.
     model=os.environ.get("ADK_MODEL", "gemini-2.5-pro"),
     description="Analyzes transaction data to calculate the frequency of approved and rejected transactions.",
-    instruction="You are a transaction analysis specialist. When a user asks for a frequency analysis of transactions, use the `analyze_transaction_frequency` tool.",
+    instruction=TRANSACTION_AGENT_PROMPT,
     tools=[FunctionTool(analyze_transaction_frequency_func)],
-    output_key="transaction_agent"
+    output_key="transaction_agent",
+    include_contents=False  # Don't respond to user directly, only write to state
 )
+
+logger.info("Transaction agent initialized successfully")
 

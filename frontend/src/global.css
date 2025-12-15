@@ -1,4 +1,28 @@
-/* Keep only custom animations and remove Tailwind imports */
+@import "tailwindcss";
+
+* {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+body {
+  background-color: #0f1011;
+  color: #b8bcc1;
+  margin: 0;
+  padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Google Sans", "Inter", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+/* Custom animations */
 @keyframes fadeIn {
   from {
     opacity: 0;

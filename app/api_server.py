@@ -75,9 +75,9 @@ except Exception as e:
 # BigQuery endpoint to fetch transactions
 @app.get("/getTransactions")
 async def get_transactions(
-    limit: int | None = None,
+    limit: int = 25,
     offset: int = 0,
-    fetch_all: bool = True
+    fetch_all: bool = False
 ) -> dict[str, Any]:
     """
     Fetch transactions from BigQuery table.
@@ -108,13 +108,12 @@ async def get_transactions(
             """
             logger.info(f"Fetching ALL transactions from BigQuery table: {table_id}")
         else:
-            limit_clause = f"LIMIT {limit}" if limit else ""
-            offset_clause = f"OFFSET {offset}" if offset > 0 else ""
             query = f"""
                 SELECT *
                 FROM `{table_id}`
                 ORDER BY transaction_id DESC
-                {limit_clause} {offset_clause}
+                LIMIT {limit}
+                OFFSET {offset}
             """
             logger.info(f"Fetching transactions with limit={limit}, offset={offset}")
         
@@ -153,6 +152,69 @@ async def get_transactions(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch transactions: {str(e)}"
+        )
+
+
+@app.post("/updateTransactionStatus")
+async def update_transaction_status(request: dict[str, Any]) -> dict[str, Any]:
+    """
+    Update the approval status of a transaction in BigQuery.
+    
+    Args:
+        request: Dict containing transaction_id and approval_status
+    
+    Returns:
+        Success status and updated transaction info
+    """
+    if not bq_client:
+        raise HTTPException(
+            status_code=503,
+            detail="BigQuery client not initialized. Check credentials."
+        )
+    
+    try:
+        transaction_id = request.get("transaction_id")
+        new_status = request.get("approval_status")
+        
+        if not transaction_id or not new_status:
+            raise HTTPException(
+                status_code=400,
+                detail="Both transaction_id and approval_status are required"
+            )
+        
+        table_id = "ccibt-hack25ww7-714.tri_netra_payments.PaymentsCompliance"
+        
+        # Update query
+        update_query = f"""
+            UPDATE `{table_id}`
+            SET approval_status = @new_status
+            WHERE transaction_id = @transaction_id
+        """
+        
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("new_status", "STRING", new_status),
+                bigquery.ScalarQueryParameter("transaction_id", "STRING", transaction_id),
+            ]
+        )
+        
+        query_job = bq_client.query(update_query, job_config=job_config)
+        query_job.result()  # Wait for the query to complete
+        
+        logger.info(f"Successfully updated transaction {transaction_id} to status: {new_status}")
+        
+        return {
+            "success": True,
+            "transaction_id": transaction_id,
+            "new_status": new_status,
+            "message": f"Transaction status updated to {new_status}"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error updating transaction status: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update transaction status: {str(e)}"
         )
 
 

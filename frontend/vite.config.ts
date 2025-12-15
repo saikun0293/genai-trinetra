@@ -2,10 +2,11 @@
 import path from "node:path"
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react-swc"
+import tailwindcss from "@tailwindcss/vite"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   base: "/app/",
   resolve: {
     alias: {
@@ -23,8 +24,8 @@ export default defineConfig({
         target: "http://127.0.0.1:8000", // Default backend address
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ""),
-      },
-    },
-  },
+        rewrite: (path) => path.replace(/^\/api/, "")
+      }
+    }
+  }
 })

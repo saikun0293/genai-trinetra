@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
+import { RefreshCw, BarChart3, X, Filter, FilterX } from "lucide-react"
 
 interface Transaction {
   transaction_id: string
@@ -10,7 +11,6 @@ interface Transaction {
   payment_method?: string
   payment_purpose?: string
   payment_time?: string
-  [key: string]: any
 }
 
 interface TransactionsResponse {
@@ -20,11 +20,38 @@ interface TransactionsResponse {
   transactions: Transaction[]
 }
 
+interface Filters {
+  search: string
+  status: string
+  payeeCountry: string
+  vendorCountry: string
+  paymentMethod: string
+  minAmount: string
+  maxAmount: string
+}
+
+type TabType = "conclusion" | "payee" | "payer" | "geopolitics" | "transactions"
+
 export default function App() {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [totalCount, setTotalCount] = useState<number>(0)
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [rowsPerPage, setRowsPerPage] = useState<number>(25)
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null)
+  const [activeTab, setActiveTab] = useState<TabType>("conclusion")
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
+  const [filters, setFilters] = useState<Filters>({
+    search: "",
+    status: "",
+    payeeCountry: "",
+    vendorCountry: "",
+    paymentMethod: "",
+    minAmount: "",
+    maxAmount: ""
+  })
 
   useEffect(() => {
     fetchTransactions()
@@ -33,18 +60,18 @@ export default function App() {
   const fetchTransactions = async () => {
     try {
       setIsLoading(true)
+      setIsRefreshing(true)
       setError(null)
 
-      // Fetch all transactions by default (fetch_all=true)
-      const response = await fetch("/api/getTransactions?fetch_all=true")
+      const response = await fetch(`/api/getTransactions?fetch_all=true`)
 
       if (!response.ok) {
         throw new Error(`Failed to fetch transactions: ${response.status}`)
       }
 
       const data: TransactionsResponse = await response.json()
-      setTransactions(data.transactions || [])
-      setTotalCount(data.total || 0)
+      setAllTransactions(data.transactions || [])
+      setCurrentPage(1) // Reset to first page on refresh
     } catch (err) {
       console.error("Error fetching transactions:", err)
       setError(
@@ -52,6 +79,404 @@ export default function App() {
       )
     } finally {
       setIsLoading(false)
+      setIsRefreshing(false)
+    }
+  }
+
+  const updateTransactionStatus = async (
+    transactionId: string,
+    newStatus: string
+  ) => {
+    try {
+      const response = await fetch(`/api/updateTransactionStatus`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transaction_id: transactionId,
+          approval_status: newStatus
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update transaction status")
+      }
+
+      // Update local state
+      setAllTransactions((prev) =>
+        prev.map((t) =>
+          t.transaction_id === transactionId
+            ? { ...t, approval_status: newStatus }
+            : t
+        )
+      )
+
+      // Update selected transaction if it's the one being updated
+      if (selectedTransaction?.transaction_id === transactionId) {
+        setSelectedTransaction((prev) =>
+          prev ? { ...prev, approval_status: newStatus } : null
+        )
+      }
+
+      alert(`Transaction ${newStatus} successfully!`)
+    } catch (err) {
+      console.error("Error updating transaction:", err)
+      alert("Failed to update transaction status")
+    }
+  }
+
+  // Frontend pagination
+  const totalCount = allTransactions.length
+  const startIndex = (currentPage - 1) * rowsPerPage
+  const endIndex = startIndex + rowsPerPage
+  const paginatedTransactions = allTransactions.slice(startIndex, endIndex)
+  const totalPages = Math.ceil(totalCount / rowsPerPage)
+
+  // Get unique values for filter dropdowns
+  const uniqueStatuses = useMemo(
+    () =>
+      Array.from(
+        new Set(allTransactions.map((t) => t.approval_status).filter(Boolean))
+      ),
+    [allTransactions]
+  )
+  const uniquePayeeCountries = useMemo(
+    () =>
+      Array.from(
+        new Set(allTransactions.map((t) => t.payee_country).filter(Boolean))
+      ),
+    [allTransactions]
+  )
+  const uniqueVendorCountries = useMemo(
+    () =>
+      Array.from(
+        new Set(allTransactions.map((t) => t.vendor_country).filter(Boolean))
+      ),
+    [allTransactions]
+  )
+  const uniquePaymentMethods = useMemo(
+    () =>
+      Array.from(
+        new Set(allTransactions.map((t) => t.payment_method).filter(Boolean))
+      ),
+    [allTransactions]
+  )
+
+  // Apply filters
+  const filteredTransactions = useMemo(() => {
+    return allTransactions.filter((transaction) => {
+      // Search filter
+      if (
+        filters.search &&
+        !transaction.transaction_id
+          .toLowerCase()
+          .includes(filters.search.toLowerCase())
+      ) {
+        return false
+      }
+
+      // Status filter
+      if (filters.status && transaction.approval_status !== filters.status) {
+        return false
+      }
+
+      // Payee country filter
+      if (
+        filters.payeeCountry &&
+        transaction.payee_country !== filters.payeeCountry
+      ) {
+        return false
+      }
+
+      // Vendor country filter
+      if (
+        filters.vendorCountry &&
+        transaction.vendor_country !== filters.vendorCountry
+      ) {
+        return false
+      }
+
+      // Payment method filter
+      if (
+        filters.paymentMethod &&
+        transaction.payment_method !== filters.paymentMethod
+      ) {
+        return false
+      }
+
+      // Amount filters
+      if (
+        filters.minAmount &&
+        transaction.amount &&
+        transaction.amount < Number(filters.minAmount)
+      ) {
+        return false
+      }
+      if (
+        filters.maxAmount &&
+        transaction.amount &&
+        transaction.amount > Number(filters.maxAmount)
+      ) {
+        return false
+      }
+
+      return true
+    })
+  }, [allTransactions, filters])
+
+  // Update pagination based on filtered results
+  const filteredTotalCount = filteredTransactions.length
+  const filteredStartIndex = (currentPage - 1) * rowsPerPage
+  const filteredEndIndex = filteredStartIndex + rowsPerPage
+  const filteredPaginatedTransactions = filteredTransactions.slice(
+    filteredStartIndex,
+    filteredEndIndex
+  )
+  const filteredTotalPages = Math.ceil(filteredTotalCount / rowsPerPage)
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filters])
+
+  const resetFilters = () => {
+    setFilters({
+      search: "",
+      status: "",
+      payeeCountry: "",
+      vendorCountry: "",
+      paymentMethod: "",
+      minAmount: "",
+      maxAmount: ""
+    })
+  }
+
+  const activeFilterCount = useMemo(() => {
+    return Object.values(filters).filter((value) => value !== "").length
+  }, [filters])
+
+  const PaginationControls = () => (
+    <div
+      className="flex items-center justify-between rounded-lg px-6 py-4"
+      style={{ backgroundColor: "#1E1F20", border: "1px solid #2D2E2F" }}
+    >
+      <div className="flex items-center gap-4">
+        <span className="text-sm" style={{ color: "#B8BCC1" }}>
+          Showing {filteredStartIndex + 1} to{" "}
+          {Math.min(filteredEndIndex, filteredTotalCount)} of{" "}
+          {filteredTotalCount}
+          {activeFilterCount > 0 && ` (filtered from ${totalCount})`}
+        </span>
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="rowsPerPage"
+            className="text-sm"
+            style={{ color: "#B8BCC1" }}
+          >
+            Rows per page:
+          </label>
+          <select
+            id="rowsPerPage"
+            value={rowsPerPage}
+            onChange={(e) => {
+              setRowsPerPage(Number(e.target.value))
+              setCurrentPage(1)
+            }}
+            className="rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            style={{
+              backgroundColor: "#2D2E2F",
+              color: "#B8BCC1",
+              border: "1px solid #3C3D3F"
+            }}
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setCurrentPage(1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-80"
+          style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+        >
+          First
+        </button>
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-1 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-80"
+          style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+        >
+          Previous
+        </button>
+        <span className="text-sm px-3" style={{ color: "#B8BCC1" }}>
+          Page {currentPage} of {filteredTotalPages || 1}
+        </span>
+        <button
+          onClick={() => setCurrentPage((prev) => prev + 1)}
+          disabled={currentPage >= filteredTotalPages}
+          className="px-3 py-1 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-80"
+          style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+        >
+          Next
+        </button>
+        <button
+          onClick={() => setCurrentPage(filteredTotalPages)}
+          disabled={currentPage >= filteredTotalPages}
+          className="px-3 py-1 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-80"
+          style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+        >
+          Last
+        </button>
+      </div>
+    </div>
+  )
+
+  const renderTabContent = () => {
+    if (!selectedTransaction) return null
+
+    const isInReview =
+      selectedTransaction.approval_status.toLowerCase().includes("review") ||
+      selectedTransaction.approval_status.toLowerCase() === "in review" ||
+      selectedTransaction.approval_status.toLowerCase() === "pending"
+
+    switch (activeTab) {
+      case "conclusion":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
+              Analysis Conclusion
+            </h3>
+            <p style={{ color: "#B8BCC1" }}>
+              This is a placeholder for the AI-generated conclusion about the
+              transaction analysis. The system has reviewed payment details,
+              compliance requirements, and risk factors.
+            </p>
+            <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
+              <p className="text-sm" style={{ color: "#B8BCC1" }}>
+                <strong>Transaction ID:</strong>{" "}
+                {selectedTransaction.transaction_id}
+              </p>
+              <p className="text-sm mt-2" style={{ color: "#B8BCC1" }}>
+                <strong>Current Status:</strong>{" "}
+                {selectedTransaction.approval_status}
+              </p>
+            </div>
+            {isInReview && (
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() =>
+                    updateTransactionStatus(
+                      selectedTransaction.transaction_id,
+                      "Approved"
+                    )
+                  }
+                  className="flex-1 px-4 py-2 rounded font-medium transition-all hover:opacity-90"
+                  style={{ backgroundColor: "#22c55e", color: "#fff" }}
+                >
+                  Approve Transaction
+                </button>
+                <button
+                  onClick={() =>
+                    updateTransactionStatus(
+                      selectedTransaction.transaction_id,
+                      "Rejected"
+                    )
+                  }
+                  className="flex-1 px-4 py-2 rounded font-medium transition-all hover:opacity-90"
+                  style={{ backgroundColor: "#ef4444", color: "#fff" }}
+                >
+                  Reject Transaction
+                </button>
+              </div>
+            )}
+          </div>
+        )
+      case "payee":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
+              Payee Information
+            </h3>
+            <p style={{ color: "#B8BCC1" }}>
+              Detailed analysis of the payee entity, including historical
+              transaction patterns, risk assessment, and compliance status.
+            </p>
+            <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
+              <p className="text-sm" style={{ color: "#B8BCC1" }}>
+                <strong>Country:</strong>{" "}
+                {selectedTransaction.payee_country || "N/A"}
+              </p>
+              <p className="text-sm mt-2" style={{ color: "#B8BCC1" }}>
+                Sample payee data and risk indicators would appear here.
+              </p>
+            </div>
+          </div>
+        )
+      case "payer":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
+              Payer (Vendor) Information
+            </h3>
+            <p style={{ color: "#B8BCC1" }}>
+              Analysis of the vendor/payer entity including verification status,
+              transaction history, and reputation score.
+            </p>
+            <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
+              <p className="text-sm" style={{ color: "#B8BCC1" }}>
+                <strong>Country:</strong>{" "}
+                {selectedTransaction.vendor_country || "N/A"}
+              </p>
+              <p className="text-sm mt-2" style={{ color: "#B8BCC1" }}>
+                Sample vendor data and compliance information would appear here.
+              </p>
+            </div>
+          </div>
+        )
+      case "geopolitics":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
+              Geopolitical Analysis
+            </h3>
+            <p style={{ color: "#B8BCC1" }}>
+              Assessment of geopolitical risks, sanctions screening, and
+              regional compliance requirements affecting this transaction.
+            </p>
+            <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
+              <p className="text-sm" style={{ color: "#B8BCC1" }}>
+                <strong>Route:</strong> {selectedTransaction.payee_country} →{" "}
+                {selectedTransaction.vendor_country}
+              </p>
+              <p className="text-sm mt-2" style={{ color: "#B8BCC1" }}>
+                Geopolitical risk assessment and sanctions screening results
+                would appear here.
+              </p>
+            </div>
+          </div>
+        )
+      case "transactions":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
+              Transaction History
+            </h3>
+            <p style={{ color: "#B8BCC1" }}>
+              Historical transactions between the payee and payer entities,
+              including pattern analysis and anomaly detection.
+            </p>
+            <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
+              <p className="text-sm" style={{ color: "#B8BCC1" }}>
+                Previous transaction data and behavioral patterns would be
+                displayed here.
+              </p>
+            </div>
+          </div>
+        )
     }
   }
 
@@ -62,15 +487,15 @@ export default function App() {
       normalizedStatus.includes("approved") ||
       normalizedStatus === "approved"
     ) {
-      return "bg-green-50 hover:bg-green-100"
+      return { backgroundColor: "#1A2E1A", borderBottom: "1px solid #2D2E2F" }
     } else if (
       normalizedStatus.includes("review") ||
       normalizedStatus === "in review" ||
       normalizedStatus === "pending"
     ) {
-      return "bg-yellow-50 hover:bg-yellow-100"
+      return { backgroundColor: "#2E2A1A", borderBottom: "1px solid #2D2E2F" }
     } else {
-      return "bg-red-50 hover:bg-red-100"
+      return { backgroundColor: "#2E1A1A", borderBottom: "1px solid #2D2E2F" }
     }
   }
 
@@ -95,10 +520,15 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "#0F1011" }}
+      >
         <div className="text-center space-y-4">
           <div className="w-16 h-16 border-4 border-neutral-600 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-          <p className="text-xl text-neutral-300">Loading transactions...</p>
+          <p className="text-xl" style={{ color: "#B8BCC1" }}>
+            Loading transactions...
+          </p>
         </div>
       </div>
     )
@@ -106,7 +536,10 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "#0F1011" }}
+      >
         <div className="text-center space-y-4">
           <p className="text-xl text-red-400">Error: {error}</p>
           <button
@@ -121,111 +554,532 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Payment Compliance Dashboard
-          </h1>
-          <div className="flex items-center gap-4 text-neutral-300">
-            <p>
-              Showing:{" "}
-              <span className="font-semibold text-white">
-                {transactions.length}
-              </span>{" "}
-              transactions
-            </p>
-            <span className="text-neutral-500">•</span>
-            <p>
-              Total in Database:{" "}
-              <span className="font-semibold text-white">{totalCount}</span>
-            </p>
+    <div
+      className="min-h-screen p-6 flex"
+      style={{ backgroundColor: "#0F1011" }}
+    >
+      <div
+        className={`transition-all duration-300 ${
+          selectedTransaction ? "mr-[500px]" : "mr-0"
+        } flex-1`}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Payment Compliance Dashboard
+            </h1>
+            <div className="flex items-center justify-between">
+              <div
+                className="flex items-center gap-4"
+                style={{ color: "#B8BCC1" }}
+              >
+                <p>
+                  Total:{" "}
+                  <span className="font-semibold" style={{ color: "#E8EAED" }}>
+                    {totalCount}
+                  </span>{" "}
+                  transactions
+                </p>
+                {activeFilterCount > 0 && (
+                  <p>
+                    Filtered:{" "}
+                    <span
+                      className="font-semibold"
+                      style={{ color: "#60A5FA" }}
+                    >
+                      {filteredTotalCount}
+                    </span>
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-2 px-4 py-2 rounded transition-all hover:opacity-80"
+                  style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+                >
+                  <Filter className="w-4 h-4" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span
+                      className="px-2 py-0.5 text-xs rounded-full"
+                      style={{ backgroundColor: "#60A5FA", color: "#fff" }}
+                    >
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={fetchTransactions}
+                  disabled={isRefreshing}
+                  className="flex items-center gap-2 px-4 py-2 rounded transition-all hover:opacity-80 disabled:opacity-50"
+                  style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                  Refresh Data
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="bg-white rounded-lg shadow-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-800 text-white">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Transaction ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Payment Method
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Countries
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Purpose
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Payment Time
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {transactions.map((transaction) => (
-                  <tr
-                    key={transaction.transaction_id}
-                    className={`${getRowColor(
-                      transaction.approval_status
-                    )} transition-colors`}
+          {/* Filter Panel */}
+          {showFilters && (
+            <div
+              className="mb-4 p-6 rounded-lg"
+              style={{
+                backgroundColor: "#1E1F20",
+                border: "1px solid #2D2E2F"
+              }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3
+                  className="text-lg font-semibold"
+                  style={{ color: "#E8EAED" }}
+                >
+                  Filter Transactions
+                </h3>
+                <button
+                  onClick={resetFilters}
+                  className="flex items-center gap-2 px-3 py-1 text-sm rounded transition-all hover:opacity-80"
+                  style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+                  disabled={activeFilterCount === 0}
+                >
+                  <FilterX className="w-4 h-4" />
+                  Reset Filters
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Search */}
+                <div>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ color: "#B8BCC1" }}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {transaction.transaction_id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusBadgeColor(
-                          transaction.approval_status
-                        )}`}
-                      >
-                        {transaction.approval_status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transaction.amount
-                        ? `${
-                            transaction.currency || ""
-                          } ${transaction.amount.toLocaleString()}`
-                        : "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {transaction.payment_method || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      <div className="flex flex-col">
-                        <span>From: {transaction.payee_country || "N/A"}</span>
-                        <span>To: {transaction.vendor_country || "N/A"}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {transaction.payment_purpose || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {transaction.payment_time || "N/A"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    Search Transaction ID
+                  </label>
+                  <input
+                    type="text"
+                    value={filters.search}
+                    onChange={(e) =>
+                      setFilters({ ...filters, search: e.target.value })
+                    }
+                    placeholder="Enter transaction ID..."
+                    className="w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      backgroundColor: "#2D2E2F",
+                      color: "#B8BCC1",
+                      border: "1px solid #3C3D3F"
+                    }}
+                  />
+                </div>
 
-        {transactions.length === 0 && (
-          <div className="text-center mt-8">
-            <p className="text-neutral-400">No transactions found</p>
+                {/* Status */}
+                <div>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ color: "#B8BCC1" }}
+                  >
+                    Status
+                  </label>
+                  <select
+                    value={filters.status}
+                    onChange={(e) =>
+                      setFilters({ ...filters, status: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      backgroundColor: "#2D2E2F",
+                      color: "#B8BCC1",
+                      border: "1px solid #3C3D3F"
+                    }}
+                  >
+                    <option value="">All Statuses</option>
+                    {uniqueStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Payee Country */}
+                <div>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ color: "#B8BCC1" }}
+                  >
+                    Payee Country (From)
+                  </label>
+                  <select
+                    value={filters.payeeCountry}
+                    onChange={(e) =>
+                      setFilters({ ...filters, payeeCountry: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      backgroundColor: "#2D2E2F",
+                      color: "#B8BCC1",
+                      border: "1px solid #3C3D3F"
+                    }}
+                  >
+                    <option value="">All Countries</option>
+                    {uniquePayeeCountries.sort().map((country) => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Vendor Country */}
+                <div>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ color: "#B8BCC1" }}
+                  >
+                    Vendor Country (To)
+                  </label>
+                  <select
+                    value={filters.vendorCountry}
+                    onChange={(e) =>
+                      setFilters({ ...filters, vendorCountry: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      backgroundColor: "#2D2E2F",
+                      color: "#B8BCC1",
+                      border: "1px solid #3C3D3F"
+                    }}
+                  >
+                    <option value="">All Countries</option>
+                    {uniqueVendorCountries.sort().map((country) => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Payment Method */}
+                <div>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ color: "#B8BCC1" }}
+                  >
+                    Payment Method
+                  </label>
+                  <select
+                    value={filters.paymentMethod}
+                    onChange={(e) =>
+                      setFilters({ ...filters, paymentMethod: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      backgroundColor: "#2D2E2F",
+                      color: "#B8BCC1",
+                      border: "1px solid #3C3D3F"
+                    }}
+                  >
+                    <option value="">All Methods</option>
+                    {uniquePaymentMethods.sort().map((method) => (
+                      <option key={method} value={method}>
+                        {method}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Min Amount */}
+                <div>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ color: "#B8BCC1" }}
+                  >
+                    Min Amount
+                  </label>
+                  <input
+                    type="number"
+                    value={filters.minAmount}
+                    onChange={(e) =>
+                      setFilters({ ...filters, minAmount: e.target.value })
+                    }
+                    placeholder="0"
+                    className="w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      backgroundColor: "#2D2E2F",
+                      color: "#B8BCC1",
+                      border: "1px solid #3C3D3F"
+                    }}
+                  />
+                </div>
+
+                {/* Max Amount */}
+                <div>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ color: "#B8BCC1" }}
+                  >
+                    Max Amount
+                  </label>
+                  <input
+                    type="number"
+                    value={filters.maxAmount}
+                    onChange={(e) =>
+                      setFilters({ ...filters, maxAmount: e.target.value })
+                    }
+                    placeholder="999999999"
+                    className="w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      backgroundColor: "#2D2E2F",
+                      color: "#B8BCC1",
+                      border: "1px solid #3C3D3F"
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Top Pagination */}
+          {filteredTotalCount > 0 && (
+            <div className="mb-4">
+              <PaginationControls />
+            </div>
+          )}
+
+          <div
+            className="rounded-lg shadow-2xl overflow-hidden"
+            style={{ backgroundColor: "#1E1F20", border: "1px solid #2D2E2F" }}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead style={{ backgroundColor: "#17181A" }}>
+                  <tr>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#B8BCC1" }}
+                    >
+                      Transaction ID
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#B8BCC1" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#B8BCC1" }}
+                    >
+                      Amount
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#B8BCC1" }}
+                    >
+                      Payment Method
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#B8BCC1" }}
+                    >
+                      Countries
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#B8BCC1" }}
+                    >
+                      Purpose
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#B8BCC1" }}
+                    >
+                      Payment Time
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: "#B8BCC1" }}
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody style={{ borderTop: "1px solid #2D2E2F" }}>
+                  {filteredPaginatedTransactions.map((transaction) => (
+                    <tr
+                      key={transaction.transaction_id}
+                      className="transition-colors hover:opacity-80"
+                      style={getRowColor(transaction.approval_status)}
+                    >
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                        style={{ color: "#B8BCC1" }}
+                      >
+                        {transaction.transaction_id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusBadgeColor(
+                            transaction.approval_status
+                          )}`}
+                        >
+                          {transaction.approval_status}
+                        </span>
+                      </td>
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-sm"
+                        style={{ color: "#B8BCC1" }}
+                      >
+                        {transaction.amount
+                          ? `${
+                              transaction.currency || ""
+                            } ${transaction.amount.toLocaleString()}`
+                          : "N/A"}
+                      </td>
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-sm"
+                        style={{ color: "#B8BCC1" }}
+                      >
+                        {transaction.payment_method || "N/A"}
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm"
+                        style={{ color: "#B8BCC1" }}
+                      >
+                        <div className="flex flex-col">
+                          <span>
+                            From: {transaction.payee_country || "N/A"}
+                          </span>
+                          <span>To: {transaction.vendor_country || "N/A"}</span>
+                        </div>
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm"
+                        style={{ color: "#B8BCC1" }}
+                      >
+                        {transaction.payment_purpose || "N/A"}
+                      </td>
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-sm"
+                        style={{ color: "#B8BCC1" }}
+                      >
+                        {transaction.payment_time || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={() => {
+                            setSelectedTransaction(transaction)
+                            setActiveTab("conclusion")
+                          }}
+                          className="p-2 rounded transition-all hover:opacity-80"
+                          style={{
+                            backgroundColor: "#2D2E2F",
+                            color: "#B8BCC1"
+                          }}
+                          title="Analyze Transaction"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        )}
+
+          {filteredPaginatedTransactions.length === 0 && !isLoading && (
+            <div className="text-center mt-8">
+              <p style={{ color: "#B8BCC1" }}>
+                {activeFilterCount > 0
+                  ? "No transactions match the current filters"
+                  : "No transactions found"}
+              </p>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={resetFilters}
+                  className="mt-4 px-4 py-2 rounded transition-all hover:opacity-80"
+                  style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Bottom Pagination */}
+          {filteredTotalCount > 0 && (
+            <div className="mt-6">
+              <PaginationControls />
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Side Panel */}
+      {selectedTransaction && (
+        <div
+          className="fixed right-0 top-0 h-full w-[500px] shadow-2xl overflow-y-auto"
+          style={{
+            backgroundColor: "#1E1F20",
+            borderLeft: "1px solid #2D2E2F"
+          }}
+        >
+          <div
+            className="sticky top-0 z-10 flex items-center justify-between p-6"
+            style={{
+              backgroundColor: "#17181A",
+              borderBottom: "1px solid #2D2E2F"
+            }}
+          >
+            <h2 className="text-xl font-bold" style={{ color: "#E8EAED" }}>
+              Transaction Analysis
+            </h2>
+            <button
+              onClick={() => setSelectedTransaction(null)}
+              className="p-2 rounded transition-all hover:opacity-80"
+              style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div
+            className="flex border-b"
+            style={{ borderColor: "#2D2E2F", backgroundColor: "#17181A" }}
+          >
+            {[
+              { id: "conclusion", label: "Conclusion" },
+              { id: "payee", label: "Payee" },
+              { id: "payer", label: "Payer" },
+              { id: "geopolitics", label: "Geopolitics" },
+              { id: "transactions", label: "History" }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className="flex-1 px-4 py-3 text-sm font-medium transition-all"
+                style={{
+                  color: activeTab === tab.id ? "#60A5FA" : "#B8BCC1",
+                  borderBottom:
+                    activeTab === tab.id
+                      ? "2px solid #60A5FA"
+                      : "2px solid transparent"
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-6">{renderTabContent()}</div>
+        </div>
+      )}
     </div>
   )
 }

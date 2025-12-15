@@ -18,9 +18,6 @@ export const theme = createTheme({
       secondary: "#a3a3a3" // neutral-400
     }
   },
-  typography: {
-    fontFamily: "system-ui, -apple-system, sans-serif"
-  },
   shape: {
     borderRadius: 8
   }

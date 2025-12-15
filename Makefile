@@ -23,6 +23,33 @@ playground:
 	uv run adk web . --port 8501 --reload_agents
 
 # ==============================================================================
+# Local Backend Targets
+# ==============================================================================
+
+# Run ADK API server (agent-only, standard endpoints)
+local-backend:
+	@echo "==============================================================================="
+	@echo "| 🚀 Starting ADK API server (agent-only)...                                  |"
+	@echo "|                                                                             |"
+	@echo "| 📍 Server: http://localhost:8000                                            |"
+	@echo "| 📖 Docs:   http://localhost:8000/docs                                       |"
+	@echo "==============================================================================="
+	uv run adk api_server . --port 8000
+
+# Run custom API server (agent + custom REST endpoints)
+api-server:
+	@echo "==============================================================================="
+	@echo "| 🚀 Starting custom API server (agent + custom endpoints)...                 |"
+	@echo "|                                                                             |"
+	@echo "| 📍 Server: http://localhost:8000                                            |"
+	@echo "| 📖 Docs:   http://localhost:8000/docs                                       |"
+	@echo "| 🔧 Custom: http://localhost:8000/api/*                                      |"
+	@echo "|                                                                             |"
+	@echo "| 💡 See app/API_SERVER_README.md for custom endpoint documentation          |"
+	@echo "==============================================================================="
+	uv run python -m app.api_server
+
+# ==============================================================================
 # Backend Deployment Targets
 # ==============================================================================
 

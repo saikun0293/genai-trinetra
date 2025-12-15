@@ -1,3 +1,4 @@
+# ruff: noqa
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .agent import app
+"""
+Main agent module for the ADK agent starter pack.
+This module re-exports the compliance agent as the primary app.
+"""
 
-__all__ = ["app"]
+import logging
+from google.adk.apps.app import App
+from app.compliance_agent.agent import root_agent
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Create the App instance - this is what gets loaded by ADK and deployed
+app = App(
+    name="app",
+    root_agent=root_agent
+)
+
+logger.info("Agent application initialized successfully")

@@ -17,11 +17,13 @@ import logging
 import os
 import google.auth
 from google.adk.agents import ParallelAgent, SequentialAgent
+from google.adk.agents.callback_context import CallbackContext
 from google.adk.apps.app import App
 from app.sub_agents.geopolitics_agent import geopolitics_agent
 from app.sub_agents.payee_vendor_agent import payee_agent
 from app.sub_agents.payer_validation_agent import payer_validation_agent
 from app.sub_agents.transaction_agent import transaction_agent
+from app.sub_agents.critique_agent import critique_agent
 
 
 # Configure logging
@@ -36,6 +38,24 @@ os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 logger.info(f"Initialized with project: {project_id}, location: {os.environ['GOOGLE_CLOUD_LOCATION']}")
 
+def log_agent_outputs(callback_context: CallbackContext) -> None:
+    """Log session state after parallel agents complete to verify outputs are stored."""
+    logger.info("=" * 80)
+    logger.info("COMPLIANCE ANALYZER - Session State After Parallel Execution")
+    logger.info("=" * 80)
+    
+    state = callback_context.session.state
+    agent_keys = ["payee_agent", "payer_validation_agent", "geopolitics_agent", "transaction_agent"]
+    
+    for key in agent_keys:
+        if key in state:
+            output_preview = str(state[key])[:200] if state[key] else "None"
+            logger.info(f"✓ {key}: Present ({len(str(state[key]))} chars) - {output_preview}...")
+        else:
+            logger.warning(f"✗ {key}: MISSING from session state")
+    
+    logger.info("=" * 80)
+
 compliance_analyzer = ParallelAgent(
     name="compliance_analyzer",
     description="Runs multiple compliance analysis agents in parallel to assess different aspects of a transaction simultaneously.",
@@ -44,6 +64,10 @@ compliance_analyzer = ParallelAgent(
 
 root_agent = SequentialAgent(
     name="compliance_orchestrator",
-    description="Orchestrates the end-to-end compliance check by running analysis agents in a predefined sequence.",
-    sub_agents=[compliance_analyzer]
+    description="Orchestrates the end-to-end compliance check by running analysis agents in parallel, then synthesizing with a critique agent.",
+    sub_agents=[compliance_analyzer, critique_agent]
 )
+
+# Export the root_agent directly for ADK CLI
+# The AgentEngineApp wrapper in agent_engine_app.py will wrap this for deployment
+app = root_agent

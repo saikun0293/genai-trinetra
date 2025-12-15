@@ -13,6 +13,11 @@ adk web
 
 Mention in your gemini prompts to use context/ if you wish, and you can store context files there. say adk-samples, adk-docs etc.
 
+### Running the app
+
+- frontend : `cd frontend && npm run dev`
+- backend : `uv run adk api_server . --port 8000`
+
 ## About
 
 A base ReAct agent built with Google's Agent Development Kit (ADK)

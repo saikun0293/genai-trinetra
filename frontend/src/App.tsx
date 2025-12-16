@@ -4,6 +4,7 @@ import { SideNav } from "@/components/SideNav"
 import { VerifyView } from "@/components/VerifyView"
 import { agentService } from "@/services/agentService"
 import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 interface Transaction {
   transaction_id: string
@@ -375,11 +376,6 @@ export default function App() {
   const renderTabContent = () => {
     if (!selectedTransaction) return null
 
-    const isInReview =
-      selectedTransaction.approval_status.toLowerCase().includes("review") ||
-      selectedTransaction.approval_status.toLowerCase() === "in review" ||
-      selectedTransaction.approval_status.toLowerCase() === "pending"
-
     if (isLoadingAnalysis) {
       return (
         <div className="flex items-center justify-center py-12">
@@ -394,79 +390,231 @@ export default function App() {
     }
 
     switch (activeTab) {
-      case "conclusion":
+      case "conclusion": {
+        interface CriticData {
+          final_decision?: {
+            score: number
+            confidence_score: number
+            category: string
+            reason: string
+            notes?: string
+          }
+          critique_agent_response_markdown?: string
+        }
+
+        let criticData: CriticData | null = null
+        try {
+          if (analysisData?.critic_analysis) {
+            criticData = JSON.parse(analysisData.critic_analysis)
+          }
+        } catch (e) {
+          console.error("Failed to parse critic_analysis JSON:", e)
+        }
+
+        const finalDecision = criticData?.final_decision
+        const markdown = criticData?.critique_agent_response_markdown
+
+        const getCategoryColor = (category: string) => {
+          switch (category) {
+            case "APPROVED":
+              return "#22c55e"
+            case "REJECTED":
+              return "#ef4444"
+            case "REVIEW":
+              return "#f59e0b"
+            default:
+              return "#6b7280"
+          }
+        }
+
+        const getCategoryBg = (category: string) => {
+          switch (category) {
+            case "APPROVED":
+              return "#1A2E1A"
+            case "REJECTED":
+              return "#2E1A1A"
+            case "REVIEW":
+              return "#2E2A1A"
+            default:
+              return "#2D2E2F"
+          }
+        }
+
         return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
-              Analysis Conclusion
-            </h3>
+          <div className="space-y-6">
             {analysisData?.critic_analysis ? (
-              <div
-                className="prose prose-invert max-w-none"
-                style={{ color: "#B8BCC1" }}
-              >
-                <ReactMarkdown className="text-sm">
-                  {analysisData.critic_analysis}
-                </ReactMarkdown>
-              </div>
+              <>
+                {/* Final Decision Section */}
+                {finalDecision && (
+                  <div
+                    className="rounded-lg p-6 space-y-4"
+                    style={{
+                      backgroundColor: getCategoryBg(finalDecision.category)
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3
+                        className="text-xl font-bold"
+                        style={{ color: "#E8EAED" }}
+                      >
+                        Final Decision
+                      </h3>
+                      <span
+                        className="px-4 py-2 rounded-full font-bold text-sm"
+                        style={{
+                          backgroundColor: getCategoryColor(
+                            finalDecision.category
+                          ),
+                          color: "#fff"
+                        }}
+                      >
+                        {finalDecision.category}
+                      </span>
+                    </div>
+
+                    {/* Score Meters */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Risk Score */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: "#B8BCC1" }}
+                          >
+                            Risk Score
+                          </span>
+                          <span
+                            className="text-lg font-bold"
+                            style={{ color: "#E8EAED" }}
+                          >
+                            {finalDecision.score}/100
+                          </span>
+                        </div>
+                        <div
+                          className="h-3 rounded-full overflow-hidden"
+                          style={{ backgroundColor: "#17181A" }}
+                        >
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${finalDecision.score}%`,
+                              backgroundColor:
+                                finalDecision.score < 30
+                                  ? "#22c55e"
+                                  : finalDecision.score < 70
+                                  ? "#f59e0b"
+                                  : "#ef4444"
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Confidence Score */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: "#B8BCC1" }}
+                          >
+                            Confidence
+                          </span>
+                          <span
+                            className="text-lg font-bold"
+                            style={{ color: "#E8EAED" }}
+                          >
+                            {finalDecision.confidence_score}/100
+                          </span>
+                        </div>
+                        <div
+                          className="h-3 rounded-full overflow-hidden"
+                          style={{ backgroundColor: "#17181A" }}
+                        >
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${finalDecision.confidence_score}%`,
+                              backgroundColor: "#60A5FA"
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reason */}
+                    <div className="space-y-2">
+                      <h4
+                        className="text-sm font-semibold"
+                        style={{ color: "#E8EAED" }}
+                      >
+                        Reason
+                      </h4>
+                      <p className="text-sm" style={{ color: "#B8BCC1" }}>
+                        {finalDecision.reason}
+                      </p>
+                    </div>
+
+                    {/* Notes */}
+                    {finalDecision.notes && (
+                      <div className="space-y-2">
+                        <h4
+                          className="text-sm font-semibold"
+                          style={{ color: "#E8EAED" }}
+                        >
+                          Additional Notes
+                        </h4>
+                        <p className="text-sm" style={{ color: "#B8BCC1" }}>
+                          {finalDecision.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Markdown Analysis */}
+                {markdown && (
+                  <div
+                    className="max-w-none markdown-analysis"
+                    style={{ color: "#B8BCC1" }}
+                  >
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {markdown}
+                    </ReactMarkdown>
+                  </div>
+                )}
+
+                {/* Transaction Info */}
+                <div
+                  className="p-4 rounded"
+                  style={{ backgroundColor: "#2D2E2F" }}
+                >
+                  <p className="text-sm" style={{ color: "#B8BCC1" }}>
+                    <strong>Transaction ID:</strong>{" "}
+                    {selectedTransaction.transaction_id}
+                  </p>
+                  <p className="text-sm mt-2" style={{ color: "#B8BCC1" }}>
+                    <strong>Current Status:</strong>{" "}
+                    {selectedTransaction.approval_status}
+                  </p>
+                </div>
+              </>
             ) : (
               <p style={{ color: "#B8BCC1" }}>
                 No analysis available for this transaction. Please run the
                 compliance analysis first.
               </p>
             )}
-            <div className="p-4 rounded" style={{ backgroundColor: "#2D2E2F" }}>
-              <p className="text-sm" style={{ color: "#B8BCC1" }}>
-                <strong>Transaction ID:</strong>{" "}
-                {selectedTransaction.transaction_id}
-              </p>
-              <p className="text-sm mt-2" style={{ color: "#B8BCC1" }}>
-                <strong>Current Status:</strong>{" "}
-                {selectedTransaction.approval_status}
-              </p>
-            </div>
-            {isInReview && (
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() =>
-                    updateTransactionStatus(
-                      selectedTransaction.transaction_id,
-                      "Approved"
-                    )
-                  }
-                  className="flex-1 px-4 py-2 rounded font-medium transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#22c55e", color: "#fff" }}
-                >
-                  Approve Transaction
-                </button>
-                <button
-                  onClick={() =>
-                    updateTransactionStatus(
-                      selectedTransaction.transaction_id,
-                      "Rejected"
-                    )
-                  }
-                  className="flex-1 px-4 py-2 rounded font-medium transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#ef4444", color: "#fff" }}
-                >
-                  Reject Transaction
-                </button>
-              </div>
-            )}
           </div>
         )
+      }
       case "payee":
         return (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
-              Payee Information
-            </h3>
             {analysisData?.payee_analysis ? (
               <div
-                className="prose prose-invert max-w-none"
+                className="max-w-none markdown-analysis"
                 style={{ color: "#B8BCC1" }}
               >
-                <ReactMarkdown className="text-sm">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {analysisData.payee_analysis}
                 </ReactMarkdown>
               </div>
@@ -486,15 +634,12 @@ export default function App() {
       case "payer":
         return (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
-              Payer (Vendor) Information
-            </h3>
             {analysisData?.payer_analysis ? (
               <div
-                className="prose prose-invert max-w-none"
+                className="max-w-none markdown-analysis"
                 style={{ color: "#B8BCC1" }}
               >
-                <ReactMarkdown className="text-sm">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {analysisData.payer_analysis}
                 </ReactMarkdown>
               </div>
@@ -514,15 +659,12 @@ export default function App() {
       case "geopolitics":
         return (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
-              Geopolitical Analysis
-            </h3>
             {analysisData?.geopolitical_analysis ? (
               <div
-                className="prose prose-invert max-w-none"
+                className="max-w-none markdown-analysis"
                 style={{ color: "#B8BCC1" }}
               >
-                <ReactMarkdown className="text-sm">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {analysisData.geopolitical_analysis}
                 </ReactMarkdown>
               </div>
@@ -542,15 +684,12 @@ export default function App() {
       case "transactions":
         return (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold" style={{ color: "#E8EAED" }}>
-              Transaction Analysis
-            </h3>
             {analysisData?.transaction_analysis ? (
               <div
-                className="prose prose-invert max-w-none"
+                className="max-w-none markdown-analysis"
                 style={{ color: "#B8BCC1" }}
               >
-                <ReactMarkdown className="text-sm">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {analysisData.transaction_analysis}
                 </ReactMarkdown>
               </div>
@@ -1140,65 +1279,107 @@ export default function App() {
             {/* Side Panel */}
             {selectedTransaction && (
               <div
-                className="fixed right-0 top-0 h-full w-[500px] shadow-2xl overflow-y-auto"
+                className="fixed right-0 top-0 h-full w-[500px] shadow-2xl flex flex-col"
                 style={{
                   backgroundColor: "#1E1F20",
                   borderLeft: "1px solid #2D2E2F"
                 }}
               >
+                {/* Sticky Header */}
                 <div
-                  className="sticky top-0 z-10 flex items-center justify-between p-6"
+                  className="sticky top-0 z-10"
                   style={{
                     backgroundColor: "#17181A",
                     borderBottom: "1px solid #2D2E2F"
                   }}
                 >
-                  <h2
-                    className="text-xl font-bold"
-                    style={{ color: "#E8EAED" }}
-                  >
-                    Transaction Analysis
-                  </h2>
-                  <button
-                    onClick={() => setSelectedTransaction(null)}
-                    className="p-2 rounded transition-all hover:opacity-80"
-                    style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Tabs */}
-                <div
-                  className="flex border-b"
-                  style={{ borderColor: "#2D2E2F", backgroundColor: "#17181A" }}
-                >
-                  {[
-                    { id: "conclusion", label: "Conclusion" },
-                    { id: "payee", label: "Payee" },
-                    { id: "payer", label: "Payer" },
-                    { id: "geopolitics", label: "Geopolitics" },
-                    { id: "transactions", label: "History" }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as TabType)}
-                      className="flex-1 px-4 py-3 text-sm font-medium transition-all"
-                      style={{
-                        color: activeTab === tab.id ? "#60A5FA" : "#B8BCC1",
-                        borderBottom:
-                          activeTab === tab.id
-                            ? "2px solid #60A5FA"
-                            : "2px solid transparent"
-                      }}
+                  {/* Title and Close Button */}
+                  <div className="flex items-center justify-between p-6 pb-4">
+                    <h2
+                      className="text-xl font-bold"
+                      style={{ color: "#E8EAED" }}
                     >
-                      {tab.label}
+                      Transaction Analysis
+                    </h2>
+                    <button
+                      onClick={() => setSelectedTransaction(null)}
+                      className="p-2 rounded transition-all hover:opacity-80"
+                      style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+                    >
+                      <X className="w-5 h-5" />
                     </button>
-                  ))}
+                  </div>
+
+                  {/* Action Buttons */}
+                  {(selectedTransaction.approval_status
+                    .toLowerCase()
+                    .includes("review") ||
+                    selectedTransaction.approval_status.toLowerCase() ===
+                      "in review" ||
+                    selectedTransaction.approval_status.toLowerCase() ===
+                      "pending") && (
+                    <div className="flex gap-3 px-6 pb-4">
+                      <button
+                        onClick={() =>
+                          updateTransactionStatus(
+                            selectedTransaction.transaction_id,
+                            "Approved"
+                          )
+                        }
+                        className="flex-1 px-4 py-2 rounded font-medium transition-all hover:opacity-90 text-sm"
+                        style={{ backgroundColor: "#22c55e", color: "#fff" }}
+                      >
+                        ✓ Approve
+                      </button>
+                      <button
+                        onClick={() =>
+                          updateTransactionStatus(
+                            selectedTransaction.transaction_id,
+                            "Rejected"
+                          )
+                        }
+                        className="flex-1 px-4 py-2 rounded font-medium transition-all hover:opacity-90 text-sm"
+                        style={{ backgroundColor: "#ef4444", color: "#fff" }}
+                      >
+                        ✗ Reject
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Tabs */}
+                  <div
+                    className="flex border-b"
+                    style={{ borderColor: "#2D2E2F" }}
+                  >
+                    {[
+                      { id: "conclusion", label: "Conclusion" },
+                      { id: "payee", label: "Payee" },
+                      { id: "payer", label: "Payer" },
+                      { id: "geopolitics", label: "Geopolitics" },
+                      { id: "transactions", label: "History" }
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as TabType)}
+                        className="flex-1 px-4 py-3 text-sm font-medium transition-all"
+                        style={{
+                          color: activeTab === tab.id ? "#60A5FA" : "#B8BCC1",
+                          borderBottom:
+                            activeTab === tab.id
+                              ? "2px solid #60A5FA"
+                              : "2px solid transparent"
+                        }}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Tab Content */}
-                <div className="p-6">{renderTabContent()}</div>
+                {/* Scrollable Tab Content */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  {renderTabContent()}
+                </div>
               </div>
             )}
           </div>

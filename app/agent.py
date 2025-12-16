@@ -31,7 +31,7 @@ from app.sub_agents.transaction_agent import transaction_agent
 from app.sub_agents.critique_agent import critique_agent
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.agents import Agent
-from .prompt import ROOT_ORCHESTRATOR_PROMPT
+from .prompt import ROOT_ORCHESTRATOR_PROMPT, TRANSACTION_AGENT_PROMPT
 
 
 # Configure logging
@@ -46,33 +46,6 @@ os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 logger.info(f"Compliance orchestrator initialized with project: {project_id}, location: {os.environ['GOOGLE_CLOUD_LOCATION']}")
 
-
-# Transaction ID request agent - extracts or requests transaction_id from user
-transaction_id_agent = LlmAgent(
-    name="transaction_id_requester",
-    model="gemini-2.0-flash",
-    output_key="transaction_id",
-    description="Extracts transaction_id from user's message or requests it if not provided.",
-    instruction="""
-You are a compliance assistant. Your ONLY job is to extract the transaction_id from the user's message.
-
-Check the session state for "transaction_id". If it already exists, output ONLY that transaction ID value (nothing else).
-
-If NOT in session state, look at the user's current message for a transaction ID. Common patterns:
-- TXN_001, TXN_12345
-- transaction_id: ABC123
-- TX001, TRANS_456
-
-If you find one:
-Output ONLY the transaction ID itself (e.g., "TXN_001" or "ABC123"). No other text.
-
-If you DON'T find one:
-Ask: "Please provide a transaction ID to analyze (e.g., TXN_001)."
-
-CRITICAL: When outputting a found transaction ID, return ONLY the ID with no additional text.
-"""
-)
-
 def log_agent_outputs(callback_context: CallbackContext) -> None:
     """Log session state after parallel agents complete to verify outputs are stored."""
     logger.info("=" * 80)
@@ -80,7 +53,7 @@ def log_agent_outputs(callback_context: CallbackContext) -> None:
     logger.info("=" * 80)
     
     state = callback_context.session.state
-    agent_keys = ["payee_agent", "payer_validation_agent", "geopolitics_agent", "transaction_agent"]
+    agent_keys = ["transaction_id","payee_agent", "payer_validation_agent", "geopolitics_agent", "transaction_agent"]
     
     for key in agent_keys:
         if key in state:
@@ -92,6 +65,24 @@ def log_agent_outputs(callback_context: CallbackContext) -> None:
     logger.info("=" * 80)
 
 
+def clean_transaction_id_callback(callback_context: CallbackContext) -> None:
+    """Strip whitespace from transaction_id stored in session state."""
+    transaction_id = callback_context.session.state.get("transaction_id")
+    if transaction_id and isinstance(transaction_id, str):
+        cleaned_id = transaction_id.strip()
+        callback_context.session.state["transaction_id"] = cleaned_id
+        logger.info(f"✓ Cleaned transaction_id: '{transaction_id}' -> '{cleaned_id}'")
+
+
+# Transaction ID request agent - extracts or requests transaction_id from user
+transaction_id_agent = LlmAgent(
+    name="transaction_id_requester",
+    model="gemini-2.0-flash",
+    output_key="transaction_id",
+    description="Extracts transaction_id from user's message or requests it if not provided.",
+    instruction=TRANSACTION_AGENT_PROMPT,
+    after_agent_callback=clean_transaction_id_callback  # Clean the transaction_id
+)
 
 # Parallel agent that runs all compliance analysis agents concurrently
 compliance_analyzer = ParallelAgent(

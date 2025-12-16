@@ -27,6 +27,9 @@ def get_transaction_analysis(transaction_id: str) -> Optional[Dict[str, Any]]:
         Dictionary containing analysis data or None if not found
     """
     try:
+        # Strip whitespace from transaction_id
+        transaction_id = transaction_id.strip()
+        
         client = bigquery.Client(project=PROJECT_ID)
         
         query = f"""
@@ -38,7 +41,7 @@ def get_transaction_analysis(transaction_id: str) -> Optional[Dict[str, Any]]:
             transaction_analysis,
             critic_analysis
         FROM `{FULL_TABLE_ID}`
-        WHERE transaction_id = @transaction_id
+        WHERE TRIM(transaction_id) = @transaction_id
         LIMIT 1
         """
         

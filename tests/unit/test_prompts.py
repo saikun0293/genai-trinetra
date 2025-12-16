@@ -33,7 +33,7 @@ def test_root_orchestrator_prompt_contains_key_instructions() -> None:
     # Check for important keywords that should be in the orchestrator prompt
     assert "transaction_id" in ROOT_ORCHESTRATOR_PROMPT
     assert "parallel" in ROOT_ORCHESTRATOR_PROMPT.lower()
-    assert "BigQuery" in ROOT_ORCHESTRATOR_PROMPT or "bigquery" in ROOT_ORCHESTRATOR_PROMPT.lower()
+    assert "bigquery" in ROOT_ORCHESTRATOR_PROMPT.lower()
 
 
 def test_transaction_agent_prompt_exists() -> None:

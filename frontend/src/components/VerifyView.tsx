@@ -19,8 +19,19 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [streamingText, setStreamingText] = useState("")
+  const [statusMessageIndex, setStatusMessageIndex] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  const statusMessages = [
+    "Analyzing transaction...",
+    "Checking compliance rules...",
+    "Verifying payment details...",
+    "Consulting risk database...",
+    "Evaluating geopolitical factors...",
+    "Cross-referencing vendor data...",
+    "Finalizing assessment..."
+  ]
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -29,6 +40,26 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
   useEffect(() => {
     scrollToBottom()
   }, [messages, streamingText])
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null
+
+    if (isLoading && !streamingText) {
+      // Reset to first message when loading starts
+      setStatusMessageIndex(0)
+
+      // Rotate through status messages every 5 seconds
+      interval = setInterval(() => {
+        setStatusMessageIndex((prev) => (prev + 1) % statusMessages.length)
+      }, 10000)
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval)
+      }
+    }
+  }, [isLoading, streamingText, statusMessages.length])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -245,7 +276,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                   border: "1px solid #D0D5DD"
                 }}
               >
-                <div className="prose max-w-none">
+                <div className="markdown-analysis max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {streamingText}
                   </ReactMarkdown>
@@ -257,6 +288,39 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                   />
                   <p className="text-xs" style={{ color: "#3B4953" }}>
                     Thinking...
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Loading status message */}
+          {isLoading && !streamingText && (
+            <div className="flex gap-3 justify-start">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: "#E9EEF6" }}
+              >
+                <Bot className="w-5 h-5" style={{ color: "#3b82f6" }} />
+              </div>
+              <div
+                className="max-w-[80%] rounded-lg px-4 py-3"
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  color: "#000000",
+                  border: "1px solid #D0D5DD"
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <Loader2
+                    className="w-4 h-4 animate-spin"
+                    style={{ color: "#3b82f6" }}
+                  />
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "#3B4953" }}
+                  >
+                    {statusMessages[statusMessageIndex]}
                   </p>
                 </div>
               </div>

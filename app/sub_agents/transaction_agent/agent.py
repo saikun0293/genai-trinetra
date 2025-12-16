@@ -95,7 +95,6 @@ def analyze_transaction_frequency(
 
 transaction_agent = LlmAgent(
     name="transaction_agent",
-    # Provide a default model to prevent errors if the env var is not set.
     model=os.environ.get("ADK_MODEL", "gemini-2.5-pro"),
     description="Analyzes transaction data to calculate the frequency of approved and rejected transactions for the current payer, vendor involved",
     instruction=TRANSACTION_AGENT_PROMPT,

@@ -17,8 +17,7 @@ geopolitics_agent = LlmAgent(
     description='Analyzes transaction compliance based on geopolitical factors, payment methods, timing, and purpose using real-time information.',
     instruction=GEOPOLITICS_AGENT_PROMPT,
     tools=[google_search],
-    output_key='geopolitics_agent',  # Fixed: removed dot, use underscore
-    include_contents='none',  # Don't respond to user directly, only write to state
+    output_key='geopolitics_agent',
     after_agent_callback=create_analysis_callback("geopolitical_analysis", "geopolitics_agent")  # Store in BigQuery
 )
 

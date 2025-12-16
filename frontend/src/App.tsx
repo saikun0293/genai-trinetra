@@ -6,6 +6,21 @@ import { agentService } from "@/services/agentService"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
+// Utility function to strip markdown/json code blocks
+const stripCodeBlocks = (content: string | null): string | null => {
+  if (!content) return content
+
+  // Remove markdown code blocks: ```markdown ... ```, ```json ... ```, etc.
+  const codeBlockPattern = /^```(?:json|markdown|md)?\s*\n?([\s\S]*?)\n?```$/
+  const match = content.trim().match(codeBlockPattern)
+
+  if (match) {
+    return match[1].trim()
+  }
+
+  return content
+}
+
 interface Transaction {
   transaction_id: string
   approval_status: string
@@ -405,10 +420,15 @@ export default function App() {
         let criticData: CriticData | null = null
         try {
           if (analysisData?.critic_analysis) {
-            criticData = JSON.parse(analysisData.critic_analysis)
+            // Strip code blocks before parsing JSON
+            const cleanedJson = stripCodeBlocks(analysisData.critic_analysis)
+            if (cleanedJson) {
+              criticData = JSON.parse(cleanedJson)
+            }
           }
         } catch (e) {
           console.error("Failed to parse critic_analysis JSON:", e)
+          console.error("Raw data:", analysisData?.critic_analysis)
         }
 
         const finalDecision = criticData?.final_decision
@@ -577,7 +597,7 @@ export default function App() {
                     style={{ color: "#B8BCC1" }}
                   >
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {markdown}
+                      {stripCodeBlocks(markdown) || markdown}
                     </ReactMarkdown>
                   </div>
                 )}
@@ -615,7 +635,8 @@ export default function App() {
                 style={{ color: "#B8BCC1" }}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {analysisData.payee_analysis}
+                  {stripCodeBlocks(analysisData.payee_analysis) ||
+                    analysisData.payee_analysis}
                 </ReactMarkdown>
               </div>
             ) : (
@@ -640,7 +661,8 @@ export default function App() {
                 style={{ color: "#B8BCC1" }}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {analysisData.payer_analysis}
+                  {stripCodeBlocks(analysisData.payer_analysis) ||
+                    analysisData.payer_analysis}
                 </ReactMarkdown>
               </div>
             ) : (
@@ -665,7 +687,8 @@ export default function App() {
                 style={{ color: "#B8BCC1" }}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {analysisData.geopolitical_analysis}
+                  {stripCodeBlocks(analysisData.geopolitical_analysis) ||
+                    analysisData.geopolitical_analysis}
                 </ReactMarkdown>
               </div>
             ) : (
@@ -690,7 +713,8 @@ export default function App() {
                 style={{ color: "#B8BCC1" }}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {analysisData.transaction_analysis}
+                  {stripCodeBlocks(analysisData.transaction_analysis) ||
+                    analysisData.transaction_analysis}
                 </ReactMarkdown>
               </div>
             ) : (

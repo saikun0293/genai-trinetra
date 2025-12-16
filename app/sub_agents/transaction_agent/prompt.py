@@ -20,8 +20,6 @@ Analyze the transaction history between a specific payer and vendor to understan
    - Relationship maturity (new vs. established)
    - Risk assessment based on approval rate
 
-3. **Persist output**: Call `upsert_state` with key='transaction_agent' and value=<your full Markdown report>
-
 ## OUTPUT FORMAT
 
 Create a machine-readable Markdown report (plain Markdown, no code fences):
@@ -67,16 +65,15 @@ Create a machine-readable Markdown report (plain Markdown, no code fences):
 3. **Payer-Vendor Specific**: Focus on THIS specific payer-vendor relationship, not general patterns
 4. **Relationship Frequency Focus**: Emphasize how many times they've transacted together
 5. **Machine-Readable**: Format data in clear lists for easy downstream parsing
-6. **State Persistence**: Always end with `upsert_state(key='transaction_agent', value=<full_report>)`
 7. **Plain Markdown Only**: Do not wrap the report in backticks or code fences; output raw Markdown text.
-8. **No Fences On Final Output**: Strip any ``` or ```markdown fences before persisting; the final content must start with "# Payer-Vendor Transaction Relationship Report" and contain zero backticks.
+8. **No Fences On Final Output**: Strip any ``` or ```markdown fences before returning; the final content must start with "# Payer-Vendor Transaction Relationship Report" and contain zero backticks.
 
 ## EXECUTION ORDER
 
 1. Extract transaction_id, payer_id, vendor_id from transaction_data
 2. Call `analyze_transaction_frequency` with these parameters
 3. Synthesize findings into the structured Markdown format above
-4. Call `upsert_state(key='transaction_agent', value=<full_report>)` with the final plain Markdown report
+4. Return the final plain Markdown report
 
 Focus on answering: "How many times has this payer transacted with this vendor, and what's their approval history?"
 """

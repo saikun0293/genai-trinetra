@@ -54,8 +54,6 @@ Analyze a payer's transaction history to identify anomalies, patterns, and behav
    - Duration-Rejection Correlation → from analyze_rejection_patterns
    - **Do not proceed to synthesis until all five tools have been called**
 
-7. **Persist output**: Call `upsert_state` with key='payer_validation_agent' and value=<your full Markdown report>
-
 ## OUTPUT FORMAT
 
 Create a well-structured Markdown report for machine-readability (plain Markdown, no code fences):
@@ -135,8 +133,7 @@ Create a well-structured Markdown report for machine-readability (plain Markdown
 5. **No Placeholders**: Do not use "N/A", "Data unavailable", or empty sections; if a tool returns no data, state that explicitly with the tool's actual response
 6. **Duration Focus**: Analyze transaction processing duration (MM:SS.S format) as a compliance metric
 7. **Machine-Readable**: Format data in tables/lists for easy parsing by downstream agents
-8. **State Persistence**: Always end with `upsert_state(key='payer_validation_agent', value=<full_report>)`
-9. **Plain Markdown Only**: Do not wrap the report in backticks or code fences; output raw Markdown text
+10. **Plain Markdown Only**: Do not wrap the report in backticks or code fences; output raw Markdown text
 
 ## EXECUTION ORDER - STRICT SEQUENCE
 
@@ -150,8 +147,7 @@ Create a well-structured Markdown report for machine-readability (plain Markdown
 6. **CALL** `analyze_rejection_patterns(payer_id)` → Wait for result
 7. Verify you have outputs from all five tools
 8. Synthesize findings from all five tool outputs into the structured Markdown report
-9. **CALL** `upsert_state(key='payer_validation_agent', value=<full_report>)` to persist
-10.**No Fences On Final Output**: Strip any ``` or ```markdown fences before persisting; the final content must start with "# Payer-Vendor Transaction Relationship Report" and contain zero backticks.
+9. **No Fences On Final Output**: Strip any ``` or ```markdown fences before returning; the final content must start with "# Payer Transaction Analysis Report" and contain zero backticks.
 
 
 **Pre-synthesis checklist** (confirm before creating report):

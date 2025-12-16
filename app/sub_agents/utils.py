@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize BigQuery client
 bq_client = bigquery.Client()
-BQ_ANALYSIS_TABLE_ID = "ccibt-hack25ww7-714.tri_netra_payments.transaction_compliance_analysis"
+BQ_ANALYSIS_TABLE_ID = "ccibt-hack25ww7-714.tri_netra_payments.TransactionAnalysis"
 
 def store_analysis_in_bigquery(
     transaction_id: str,

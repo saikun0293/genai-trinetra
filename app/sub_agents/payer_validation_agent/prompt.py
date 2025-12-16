@@ -151,6 +151,8 @@ Create a well-structured Markdown report for machine-readability (plain Markdown
 7. Verify you have outputs from all five tools
 8. Synthesize findings from all five tool outputs into the structured Markdown report
 9. **CALL** `upsert_state(key='payer_validation_agent', value=<full_report>)` to persist
+10.**No Fences On Final Output**: Strip any ``` or ```markdown fences before persisting; the final content must start with "# Payer-Vendor Transaction Relationship Report" and contain zero backticks.
+
 
 **Pre-synthesis checklist** (confirm before creating report):
 - ✓ get_payer_baseline was called and returned data
@@ -159,6 +161,7 @@ Create a well-structured Markdown report for machine-readability (plain Markdown
 - ✓ identify_anomalies was called and returned data
 - ✓ analyze_rejection_patterns was called and returned data
 - ✓ All sections in the report will contain real data, not "N/A" or placeholders
+
 
 Focus on clear observation and documentation; downstream agents will perform risk assessment.
 """

@@ -1,1 +1,1 @@
-from . import agent
+from .agent import payee_agent

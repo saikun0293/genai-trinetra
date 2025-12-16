@@ -123,6 +123,8 @@ When generating your final result:
 - Use Markdown headings (##, ###), bullet points (-, *) and bold where needed.
 - Do **NOT** include non-Markdown artifacts like raw JSON or plain text blocks unless inside appropriate Markdown code blocks.
 - Ensure the Markdown renders correctly in a typical Markdown viewer.
+- **No Fences On Final Output**: Strip any ``` or ```markdown fences before persisting; the final content must start with "# Payer-Vendor Transaction Relationship Report" and contain zero backticks.
+
 
 Focus on clear, actionable insights that enable risk assessment and investigation decisions.
 """

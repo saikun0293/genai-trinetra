@@ -21,8 +21,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Payee-Vendor Relationship Analysis Agent
-root_agent = LlmAgent(
-    name="root_agent",
+payee_agent = LlmAgent(
+    name="payee_agent",
     model="gemini-2.0-flash",
     description=(
         "Analyzes payee and vendor transaction patterns to identify relationships, "

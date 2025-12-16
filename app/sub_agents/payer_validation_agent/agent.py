@@ -20,8 +20,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Main Payer Validation Agent with hardcoded SQL query tools
-root_agent = LlmAgent(
-    name="root_agent",
+payer_validation_agent = LlmAgent(
+    name="payer_validation_agent",
     model="gemini-2.0-flash",
     description="Banking fraud detection agent specialized in payer transaction anomaly detection",
     instruction=PAYER_VALIDATION_PROMPT,

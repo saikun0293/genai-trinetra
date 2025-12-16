@@ -3,7 +3,11 @@ from google.adk.agents.llm_agent import LlmAgent
 from google.adk.tools import google_search
 from .prompt import GEOPOLITICS_AGENT_PROMPT
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+) 
+
 logger = logging.getLogger(__name__)
 
 geopolitics_agent = LlmAgent(

@@ -12,7 +12,11 @@ from .tools import (
 from .prompt import PAYER_VALIDATION_PROMPT
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+) 
+
 logger = logging.getLogger(__name__)
 
 # Main Payer Validation Agent with hardcoded SQL query tools

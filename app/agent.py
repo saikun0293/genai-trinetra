@@ -89,7 +89,7 @@ compliance_orchestrator_agent = AgentTool(agent = compliance_orchestrator)
 
 root_orchestrator_agent = Agent(
     name="root_orchestrator_agent",
-    model="gemini-2.5-flash",
+    model="gemini-2.5-pro",
     description="The main orchestrator that delegates tasks to specialist agents for compliance",
     instruction=ROOT_ORCHESTRATOR_PROMPT,
     tools=[compliance_orchestrator_agent]

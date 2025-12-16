@@ -67,7 +67,11 @@ def get_payer_baseline(payer_id: str) -> Dict[str, Any]:
 
 
 def get_recent_transactions(payer_id: str, days: int = 90) -> Dict[str, Any]:
-    """Get recent transaction history for a payer."""
+    """Get recent transaction history for a payer.
+    
+    Note: payment_time column contains time-only values (HH:MM.S format),
+    not full timestamps, so date-range filtering is not applicable.
+    """
     query = f"""
     SELECT
       transaction_id,
@@ -82,7 +86,6 @@ def get_recent_transactions(payer_id: str, days: int = 90) -> Dict[str, Any]:
       approval_status
     FROM `{BQ_TABLE_ID}`
     WHERE payer_id = @payer_id
-      AND CAST(payment_time AS INT64) >= (CAST(CURRENT_TIMESTAMP() AS INT64) - ({days} * 86400))
     ORDER BY payment_time DESC
     LIMIT 500
     """

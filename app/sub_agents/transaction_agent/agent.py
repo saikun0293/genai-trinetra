@@ -8,7 +8,11 @@ from google.adk.tools import FunctionTool
 from .prompt import TRANSACTION_AGENT_PROMPT
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+) 
+
 logger = logging.getLogger(__name__)
 
 # Initialize the BigQuery client once to be reused.

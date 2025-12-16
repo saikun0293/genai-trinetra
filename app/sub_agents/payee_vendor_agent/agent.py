@@ -14,12 +14,15 @@ from app.sub_agents.payee_vendor_agent.tools import (
 from .prompt import PAYEE_VENDOR_PROMPT
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+) 
 logger = logging.getLogger(__name__)
 
 # Payee-Vendor Relationship Analysis Agent
 payee_agent = LlmAgent(
-    name="payee_vendor_agent",
+    name="payee_agent",
     model="gemini-2.0-flash",
     description=(
         "Analyzes payee and vendor transaction patterns to identify relationships, "

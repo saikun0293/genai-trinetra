@@ -24,14 +24,14 @@ import google.auth
 from google.adk.apps.app import App
 from google.adk.agents import ParallelAgent, SequentialAgent, LlmAgent
 from google.adk.agents.callback_context import CallbackContext
-from app.sub_agents.geopolitics_agent import geopolitics_agent
-from app.sub_agents.payee_vendor_agent import payee_agent
-from app.sub_agents.payer_validation_agent import payer_validation_agent
-from app.sub_agents.transaction_agent import transaction_agent
-from app.sub_agents.critique_agent import critique_agent
+from sub_agents.geopolitics_agent import geopolitics_agent
+from sub_agents.payee_vendor_agent import payee_agent
+from sub_agents.payer_validation_agent import payer_validation_agent
+from sub_agents.transaction_agent import transaction_agent
+from sub_agents.critique_agent import critique_agent
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.agents import Agent
-from .prompt import ROOT_ORCHESTRATOR_PROMPT, TRANSACTION_AGENT_PROMPT
+from prompt import ROOT_ORCHESTRATOR_PROMPT, TRANSACTION_AGENT_PROMPT
 
 
 # Configure logging

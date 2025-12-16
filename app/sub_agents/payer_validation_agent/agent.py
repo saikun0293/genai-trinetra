@@ -12,12 +12,16 @@ from .tools import (
 from .prompt import PAYER_VALIDATION_PROMPT
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+) 
+
 logger = logging.getLogger(__name__)
 
 # Main Payer Validation Agent with hardcoded SQL query tools
-payer_validation_agent = LlmAgent(
-    name="payer_validation_agent",
+root_agent = LlmAgent(
+    name="root_agent",
     model="gemini-2.0-flash",
     description="Banking fraud detection agent specialized in payer transaction anomaly detection",
     instruction=PAYER_VALIDATION_PROMPT,

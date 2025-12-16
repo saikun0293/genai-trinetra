@@ -36,8 +36,7 @@ _Use the `vendor_id` from the input JSON for your analysis._
    - Suspicious Payers section → from identify_suspicious_payers
    - Temporal Patterns section → from analyze_temporal_patterns
    - **Do not proceed to synthesis until all three tools have been called**
-
-5. **Persist output**: Call `upsert_state` with key='payee_agent' and value=<your full Markdown report>
+   - Your report will be automatically saved to session state via the output_key
 
 ## OUTPUT FORMAT
 

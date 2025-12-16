@@ -10,30 +10,6 @@ bq_client = bigquery.Client()
 BQ_TABLE_ID = "ccibt-hack25ww7-714.tri_netra_payments.PaymentsCompliance"
 
 
-def upsert_state(tool_context: ToolContext, key: str, value: Any) -> Dict[str, Any]:
-    """Write or overwrite a session state entry.
-
-    Args:
-        tool_context: ADK tool context containing session state
-        key: target session state key
-        value: payload to store
-
-    Returns:
-        Dict summarizing the operation.
-    """
-    state = tool_context.state
-    existed = key in state
-    state[key] = value
-
-    logger.info("Session state %s for key=%s", "updated" if existed else "created", key)
-
-    return {
-        "status": "updated" if existed else "created",
-        "key": key,
-        "value_preview": str(value)[:500],
-    }
-
-
 def get_payer_baseline(payer_id: str) -> Dict[str, Any]:
     """Get baseline transaction metrics for a payer."""
     query = f"""

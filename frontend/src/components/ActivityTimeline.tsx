@@ -110,21 +110,21 @@ export function ActivityTimeline({
     if (index === 0 && isLoading && processedEvents.length === 0) {
       return <CircularProgress size={16} sx={{ color: "text.secondary" }} />
     }
-    if (title.toLowerCase().includes("function call")) {
+    if (title?.toLowerCase().includes("function call")) {
       return <Activity size={16} color="#60a5fa" />
-    } else if (title.toLowerCase().includes("function response")) {
+    } else if (title?.toLowerCase().includes("function response")) {
       return <Activity size={16} color="#4ade80" />
-    } else if (title.toLowerCase().includes("generating")) {
+    } else if (title?.toLowerCase().includes("generating")) {
       return <TextSearch size={16} color="#9ca3af" />
-    } else if (title.toLowerCase().includes("thinking")) {
+    } else if (title?.toLowerCase().includes("thinking")) {
       return <CircularProgress size={16} sx={{ color: "text.secondary" }} />
-    } else if (title.toLowerCase().includes("reflection")) {
+    } else if (title?.toLowerCase().includes("reflection")) {
       return <Brain size={16} color="#9ca3af" />
-    } else if (title.toLowerCase().includes("research")) {
+    } else if (title?.toLowerCase().includes("research")) {
       return <Search size={16} color="#9ca3af" />
-    } else if (title.toLowerCase().includes("finalizing")) {
+    } else if (title?.toLowerCase().includes("finalizing")) {
       return <Pen size={16} color="#9ca3af" />
-    } else if (title.toLowerCase().includes("retrieved sources")) {
+    } else if (title?.toLowerCase().includes("retrieved sources")) {
       return <Link size={16} color="#fbbf24" />
     }
     return <Activity size={16} color="#9ca3af" />

@@ -222,7 +222,7 @@ export default function App() {
       if (
         filters.search &&
         !transaction.transaction_id
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(filters.search.toLowerCase())
       ) {
         return false
@@ -1325,11 +1325,11 @@ export default function App() {
 
                   {/* Action Buttons */}
                   {(selectedTransaction.approval_status
-                    .toLowerCase()
+                    ?.toLowerCase()
                     .includes("review") ||
-                    selectedTransaction.approval_status.toLowerCase() ===
+                    selectedTransaction.approval_status?.toLowerCase() ===
                       "in review" ||
-                    selectedTransaction.approval_status.toLowerCase() ===
+                    selectedTransaction.approval_status?.toLowerCase() ===
                       "pending") && (
                     <div className="flex gap-3 px-6 pb-4">
                       <button

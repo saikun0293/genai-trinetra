@@ -72,6 +72,8 @@ def insert_and_publish():
         "payee_country": "China",
         "vendor_country": "India",
         "vendor_industry": "Shell Corporations",
+        "approval_status": "",
+        "reject_reason": ""
     }
     # =============================================================================
     

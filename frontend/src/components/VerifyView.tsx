@@ -227,7 +227,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                 }}
               >
                 {message.role === "assistant" ? (
-                  <div className="prose max-w-none">
+                  <div className="markdown-analysis max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {message.content}
                     </ReactMarkdown>

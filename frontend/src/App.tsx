@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { RefreshCw, BarChart3, X, Filter, FilterX } from "lucide-react"
 import { SideNav } from "@/components/SideNav"
-import { VerifyView } from "@/components/VerifyView"
+import { VerifyView, ChatMessage } from "@/components/VerifyView"
 import { agentService } from "@/services/agentService"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
@@ -65,6 +65,7 @@ export default function App() {
   const [activeView, setActiveView] = useState<"dashboard" | "verify">(
     "dashboard"
   )
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -808,7 +809,7 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex-1 ml-20">
         {activeView === "verify" ? (
-          <VerifyView />
+          <VerifyView messages={chatMessages} setMessages={setChatMessages} />
         ) : (
           <div className="p-6 flex">
             <div

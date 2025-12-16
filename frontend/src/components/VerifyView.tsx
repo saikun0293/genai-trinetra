@@ -4,14 +4,18 @@ import { agentService } from "@/services/agentService"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
-interface ChatMessage {
+export interface ChatMessage {
   role: "user" | "assistant"
   content: string
   timestamp: Date
 }
 
-export function VerifyView() {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+interface VerifyViewProps {
+  messages: ChatMessage[]
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
+}
+
+export function VerifyView({ messages, setMessages }: VerifyViewProps) {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [streamingText, setStreamingText] = useState("")
@@ -186,7 +190,9 @@ export function VerifyView() {
                 style={{
                   backgroundColor:
                     message.role === "user" ? "#2563EB" : "#1E1F20",
-                  color: message.role === "user" ? "#FFFFFF" : "#E8EAED"
+                  color: message.role === "user" ? "#FFFFFF" : "#E8EAED",
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere"
                 }}
               >
                 {message.role === "assistant" ? (
@@ -196,7 +202,9 @@ export function VerifyView() {
                     </ReactMarkdown>
                   </div>
                 ) : (
-                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                    {message.content}
+                  </p>
                 )}
                 <p
                   className="text-xs mt-2 opacity-70"
@@ -229,7 +237,12 @@ export function VerifyView() {
               </div>
               <div
                 className="max-w-[80%] rounded-lg px-4 py-3"
-                style={{ backgroundColor: "#1E1F20", color: "#E8EAED" }}
+                style={{
+                  backgroundColor: "#1E1F20",
+                  color: "#E8EAED",
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere"
+                }}
               >
                 <div className="prose prose-invert max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>

@@ -32,6 +32,7 @@ from app.sub_agents.critique_agent import critique_agent
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.agents import Agent
 from .prompt import ROOT_ORCHESTRATOR_PROMPT, TRANSACTION_AGENT_PROMPT
+from .tools import fetch_transaction_by_id
 
 
 # Configure logging
@@ -109,7 +110,7 @@ root_orchestrator_agent = Agent(
     model="gemini-2.5-pro",
     description="The main orchestrator that delegates tasks to specialist agents for compliance",
     instruction=ROOT_ORCHESTRATOR_PROMPT,
-    tools=[compliance_orchestrator_agent]
+    tools=[fetch_transaction_by_id,compliance_orchestrator_agent]
 )
 
 app = App(

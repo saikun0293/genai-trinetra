@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import json
 from typing import Optional
 from google.adk.agents.callback_context import CallbackContext
@@ -117,6 +118,7 @@ def update_approval_status(transaction_id: str, approval_status: str) -> bool:
             WHERE transaction_id = @transaction_id
         """
         
+        print("Updating approval status")
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
                 bigquery.ScalarQueryParameter("approval_status", "STRING", approval_status),
@@ -203,7 +205,6 @@ def create_critique_callback(column_name: str, output_key: str):
             
             # Get the agent's output from session state using output_key
             analysis_text = callback_context.session.state.get(output_key)
-            
             if analysis_text:
                 # Convert to string if it's not already
                 if not isinstance(analysis_text, str):
@@ -215,7 +216,9 @@ def create_critique_callback(column_name: str, output_key: str):
                 
                 # Parse JSON and extract category to update approval status
                 try:
-                    critique_data = json.loads(analysis_text)
+                    # Strip whitespace before parsing
+                    match = re.search(r'\{.*\}', analysis_text, re.DOTALL)
+                    critique_data = json.loads(match.group())
                     final_decision = critique_data.get("final_decision", {})
                     category = final_decision.get("category")
                     
@@ -227,7 +230,6 @@ def create_critique_callback(column_name: str, output_key: str):
                             "REVIEW": "In Review"
                         }
                         approval_status = status_mapping.get(category, category)
-                        
                         # Update approval status in PaymentsCompliance table
                         update_approval_status(transaction_id, approval_status)
                         logger.info(f"✓ Updated approval_status to '{approval_status}' based on category '{category}'")

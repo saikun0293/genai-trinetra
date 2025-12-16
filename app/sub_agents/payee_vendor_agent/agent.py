@@ -3,14 +3,14 @@ import os
 from typing import Any, Dict, List, Optional
 from google.adk.agents import LlmAgent
 from google.adk.agents.callback_context import CallbackContext
-from sub_agents.bigquery_agent.agent import bigquery_agent
-from sub_agents.payee_vendor_agent.tools import (
+from app.sub_agents.bigquery_agent.agent import bigquery_agent
+from app.sub_agents.payee_vendor_agent.tools import (
     get_vendor_for_payee,
     analyze_vendor_patterns,
     identify_suspicious_payers,
     analyze_temporal_patterns,
 )
-from sub_agents.utils import create_analysis_callback
+from app.sub_agents.utils import create_analysis_callback
 from .prompt import PAYEE_VENDOR_PROMPT
 
 # Configure logging

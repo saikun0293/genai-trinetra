@@ -139,9 +139,9 @@ export function ActivityTimeline({
   return (
     <Card
       sx={{
-        border: "none",
+        border: "1px solid #D0D5DD",
         borderRadius: 2,
-        backgroundColor: "rgba(64, 64, 64, 0.8)",
+        backgroundColor: "#FFFFFF",
         height: isTimelineCollapsed ? 48 : "auto",
         maxHeight: isTimelineCollapsed ? 48 : 500,
         py: 1

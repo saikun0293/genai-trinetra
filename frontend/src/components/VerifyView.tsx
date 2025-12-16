@@ -91,21 +91,21 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
   return (
     <div
       className="flex flex-col h-full"
-      style={{ backgroundColor: "#0F1011" }}
+      style={{ backgroundColor: "#F0F4F8" }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between px-6 py-4 border-b"
         style={{
-          backgroundColor: "#17181A",
-          borderColor: "#2D2E2F"
+          backgroundColor: "#FFFFFF",
+          borderColor: "#D0D5DD"
         }}
       >
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: "#E8EAED" }}>
+          <h2 className="text-2xl font-bold" style={{ color: "#000000" }}>
             Transaction Verification Agent
           </h2>
-          <p className="text-sm mt-1" style={{ color: "#B8BCC1" }}>
+          <p className="text-sm mt-1" style={{ color: "#74777C" }}>
             Chat with the AI agent to verify and analyze transactions
           </p>
         </div>
@@ -113,7 +113,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
           <button
             onClick={handleClearChat}
             className="flex items-center gap-2 px-4 py-2 rounded transition-all hover:opacity-80"
-            style={{ backgroundColor: "#2D2E2F", color: "#B8BCC1" }}
+            style={{ backgroundColor: "#E9EEF6", color: "#74777C" }}
             title="Clear conversation"
           >
             <Trash2 className="w-4 h-4" />
@@ -128,17 +128,17 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
           <div className="flex flex-col items-center justify-center h-full">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
-              style={{ backgroundColor: "#2D2E2F" }}
+              style={{ backgroundColor: "#E9EEF6" }}
             >
-              <Bot className="w-10 h-10" style={{ color: "#60A5FA" }} />
+              <Bot className="w-10 h-10" style={{ color: "#3b82f6" }} />
             </div>
             <h3
               className="text-xl font-semibold mb-2"
-              style={{ color: "#E8EAED" }}
+              style={{ color: "#000000" }}
             >
               Welcome to Transaction Verification
             </h3>
-            <p className="text-center max-w-md" style={{ color: "#B8BCC1" }}>
+            <p className="text-center max-w-md" style={{ color: "#74777C" }}>
               Ask me to analyze transactions, check compliance, or verify
               payment details. I can help you understand risk factors and make
               informed decisions.
@@ -155,9 +155,9 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                   onClick={() => setInput(suggestion)}
                   className="px-4 py-3 rounded text-left text-sm transition-all hover:opacity-80"
                   style={{
-                    backgroundColor: "#1E1F20",
-                    color: "#B8BCC1",
-                    border: "1px solid #2D2E2F"
+                    backgroundColor: "#FFFFFF",
+                    color: "#74777C",
+                    border: "1px solid #D0D5DD"
                   }}
                 >
                   {suggestion}
@@ -178,9 +178,9 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
               {message.role === "assistant" && (
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: "#2D2E2F" }}
+                  style={{ backgroundColor: "#E9EEF6" }}
                 >
-                  <Bot className="w-5 h-5" style={{ color: "#60A5FA" }} />
+                  <Bot className="w-5 h-5" style={{ color: "#3b82f6" }} />
                 </div>
               )}
               <div
@@ -189,14 +189,16 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                 }`}
                 style={{
                   backgroundColor:
-                    message.role === "user" ? "#2563EB" : "#1E1F20",
-                  color: message.role === "user" ? "#FFFFFF" : "#E8EAED",
+                    message.role === "user" ? "#2563EB" : "#FFFFFF",
+                  color: message.role === "user" ? "#FFFFFF" : "#000000",
                   wordBreak: "break-word",
-                  overflowWrap: "anywhere"
+                  overflowWrap: "anywhere",
+                  border:
+                    message.role === "assistant" ? "1px solid #D0D5DD" : "none"
                 }}
               >
                 {message.role === "assistant" ? (
-                  <div className="prose prose-invert max-w-none">
+                  <div className="prose max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {message.content}
                     </ReactMarkdown>
@@ -209,7 +211,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                 <p
                   className="text-xs mt-2 opacity-70"
                   style={{
-                    color: message.role === "user" ? "#E0E7FF" : "#B8BCC1"
+                    color: message.role === "user" ? "#E0E7FF" : "#74777C"
                   }}
                 >
                   {message.timestamp.toLocaleTimeString()}
@@ -218,9 +220,9 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
               {message.role === "user" && (
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 order-2"
-                  style={{ backgroundColor: "#2D2E2F" }}
+                  style={{ backgroundColor: "#E9EEF6" }}
                 >
-                  <User className="w-5 h-5" style={{ color: "#60A5FA" }} />
+                  <User className="w-5 h-5" style={{ color: "#3b82f6" }} />
                 </div>
               )}
             </div>
@@ -231,20 +233,21 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
             <div className="flex gap-3 justify-start">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: "#2D2E2F" }}
+                style={{ backgroundColor: "#E9EEF6" }}
               >
-                <Bot className="w-5 h-5" style={{ color: "#60A5FA" }} />
+                <Bot className="w-5 h-5" style={{ color: "#3b82f6" }} />
               </div>
               <div
                 className="max-w-[80%] rounded-lg px-4 py-3"
                 style={{
-                  backgroundColor: "#1E1F20",
-                  color: "#E8EAED",
+                  backgroundColor: "#FFFFFF",
+                  color: "#000000",
                   wordBreak: "break-word",
-                  overflowWrap: "anywhere"
+                  overflowWrap: "anywhere",
+                  border: "1px solid #D0D5DD"
                 }}
               >
-                <div className="prose prose-invert max-w-none">
+                <div className="prose max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {streamingText}
                   </ReactMarkdown>
@@ -252,9 +255,9 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                 <div className="flex items-center gap-1 mt-2">
                   <Loader2
                     className="w-3 h-3 animate-spin"
-                    style={{ color: "#60A5FA" }}
+                    style={{ color: "#3b82f6" }}
                   />
-                  <p className="text-xs" style={{ color: "#B8BCC1" }}>
+                  <p className="text-xs" style={{ color: "#74777C" }}>
                     Thinking...
                   </p>
                 </div>
@@ -270,8 +273,8 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
       <div
         className="border-t px-6 py-4"
         style={{
-          backgroundColor: "#17181A",
-          borderColor: "#2D2E2F"
+          backgroundColor: "#FFFFFF",
+          borderColor: "#D0D5DD"
         }}
       >
         <form onSubmit={handleSubmit} className="flex gap-3">
@@ -284,9 +287,9 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
             rows={2}
             className="flex-1 rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             style={{
-              backgroundColor: "#2D2E2F",
-              color: "#E8EAED",
-              border: "1px solid #3C3D3F"
+              backgroundColor: "#F0F4F8",
+              color: "#000000",
+              border: "1px solid #D0D5DD"
             }}
             disabled={isLoading}
           />

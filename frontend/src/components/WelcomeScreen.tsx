@@ -29,20 +29,20 @@ export function WelcomeScreen({
       }}
     >
       <Paper
-        elevation={24}
+        elevation={2}
         sx={{
           width: "100%",
           maxWidth: 800,
           p: 6,
           backdropFilter: "blur(10px)",
-          backgroundColor: "rgba(18, 18, 18, 0.8)",
+          backgroundColor: "#FFFFFF",
           border: "1px solid",
-          borderColor: "divider",
+          borderColor: "#D0D5DD",
           borderRadius: 3,
           transition: "all 0.3s ease-in-out",
           "&:hover": {
             borderColor: "primary.main",
-            boxShadow: 24
+            boxShadow: 8
           }
         }}
       >

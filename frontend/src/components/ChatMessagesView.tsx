@@ -90,7 +90,7 @@ const mdComponents = {
   blockquote: ({ className, children, ...props }: MdComponentProps) => (
     <blockquote
       className={cn(
-        "border-l-4 border-neutral-600 pl-4 italic my-3 text-sm",
+        "border-l-4 border-neutral-300 pl-4 italic my-3 text-sm",
         className
       )}
       {...props}
@@ -101,7 +101,7 @@ const mdComponents = {
   code: ({ className, children, ...props }: MdComponentProps) => (
     <code
       className={cn(
-        "bg-neutral-900 rounded px-1 py-0.5 font-mono text-xs",
+        "bg-neutral-100 rounded px-1 py-0.5 font-mono text-xs",
         className
       )}
       {...props}
@@ -112,7 +112,7 @@ const mdComponents = {
   pre: ({ className, children, ...props }: MdComponentProps) => (
     <pre
       className={cn(
-        "bg-neutral-900 p-3 rounded-lg overflow-x-auto font-mono text-xs my-3",
+        "bg-neutral-100 p-3 rounded-lg overflow-x-auto font-mono text-xs my-3",
         className
       )}
       {...props}
@@ -121,7 +121,7 @@ const mdComponents = {
     </pre>
   ),
   hr: ({ className, ...props }: MdComponentProps) => (
-    <hr className={cn("border-neutral-600 my-4", className)} {...props} />
+    <hr className={cn("border-neutral-300 my-4", className)} {...props} />
   ),
   table: ({ className, children, ...props }: MdComponentProps) => (
     <div className="my-3 overflow-x-auto">
@@ -133,7 +133,7 @@ const mdComponents = {
   th: ({ className, children, ...props }: MdComponentProps) => (
     <th
       className={cn(
-        "border border-neutral-600 px-3 py-2 text-left font-bold",
+        "border border-neutral-300 px-3 py-2 text-left font-bold",
         className
       )}
       {...props}
@@ -143,7 +143,7 @@ const mdComponents = {
   ),
   td: ({ className, children, ...props }: MdComponentProps) => (
     <td
-      className={cn("border border-neutral-600 px-3 py-2", className)}
+      className={cn("border border-neutral-300 px-3 py-2", className)}
       {...props}
     >
       {children}
@@ -165,11 +165,11 @@ const HumanMessageBubble: React.FC<HumanMessageBubbleProps> = ({
   return (
     <Box
       sx={{
-        color: "white",
+        color: "#000000",
         borderRadius: 3,
         wordBreak: "break-word",
         minHeight: 28,
-        backgroundColor: "rgba(82, 82, 82, 0.9)",
+        backgroundColor: "#E9EEF6",
         maxWidth: { xs: "100%", sm: "90%" },
         px: 3,
         pt: 2,

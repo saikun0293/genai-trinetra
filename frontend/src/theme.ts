@@ -2,7 +2,7 @@ import { createTheme } from "@mui/material/styles"
 
 export const theme = createTheme({
   palette: {
-    mode: "dark",
+    mode: "light",
     primary: {
       main: "#3b82f6" // blue-500
     },
@@ -10,13 +10,14 @@ export const theme = createTheme({
       main: "#a855f7" // purple-500
     },
     background: {
-      default: "#0c0c0d", // neutral-950
-      paper: "#171717" // neutral-900
+      default: "#F8FAFB", // light background
+      paper: "#FFFFFF" // white paper
     },
     text: {
-      primary: "#fafafa", // neutral-50
-      secondary: "#a3a3a3" // neutral-400
-    }
+      primary: "#000000", // black for headers
+      secondary: "#3B4953" // normal text color
+    },
+    divider: "#D0D5DD" // light border color
   },
   shape: {
     borderRadius: 8

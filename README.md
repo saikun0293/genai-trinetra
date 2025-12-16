@@ -13,6 +13,10 @@ adk web
 
 Mention in your gemini prompts to use context/ if you wish, and you can store context files there. say adk-samples, adk-docs etc.
 
+To use pubsub running
+pub command: `python sub_agents/bigquery_agent/publish.py`
+sub listen command: `python agent_engine_app.py`
+
 ### Running the app
 
 **Option 1: ADK API Server (agent-only)**

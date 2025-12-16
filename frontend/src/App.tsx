@@ -24,7 +24,7 @@ const stripCodeBlocks = (content: string | null): string | null => {
 interface Transaction {
   transaction_id: string
   approval_status: string
-  amount?: number
+  payment_amount?: number
   currency?: string
   payee_country?: string
   vendor_country?: string
@@ -260,15 +260,15 @@ export default function App() {
       // Amount filters
       if (
         filters.minAmount &&
-        transaction.amount &&
-        transaction.amount < Number(filters.minAmount)
+        transaction.payment_amount &&
+        transaction.payment_amount < Number(filters.minAmount)
       ) {
         return false
       }
       if (
         filters.maxAmount &&
-        transaction.amount &&
-        transaction.amount > Number(filters.maxAmount)
+        transaction.payment_amount &&
+        transaction.payment_amount > Number(filters.maxAmount)
       ) {
         return false
       }
@@ -314,7 +314,7 @@ export default function App() {
       style={{ backgroundColor: "#FFFFFF", border: "1px solid #D0D5DD" }}
     >
       <div className="flex items-center gap-4">
-        <span className="text-sm" style={{ color: "#74777C" }}>
+        <span className="text-sm" style={{ color: "#3B4953" }}>
           Showing {filteredStartIndex + 1} to{" "}
           {Math.min(filteredEndIndex, filteredTotalCount)} of{" "}
           {filteredTotalCount}
@@ -324,7 +324,7 @@ export default function App() {
           <label
             htmlFor="rowsPerPage"
             className="text-sm"
-            style={{ color: "#74777C" }}
+            style={{ color: "#3B4953" }}
           >
             Rows per page:
           </label>
@@ -354,7 +354,7 @@ export default function App() {
           onClick={() => setCurrentPage(1)}
           disabled={currentPage === 1}
           className="px-3 py-1 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-80"
-          style={{ backgroundColor: "#E9EEF6", color: "#74777C" }}
+          style={{ backgroundColor: "#E9EEF6", color: "#3B4953" }}
         >
           First
         </button>
@@ -362,18 +362,18 @@ export default function App() {
           onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
           disabled={currentPage === 1}
           className="px-3 py-1 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-80"
-          style={{ backgroundColor: "#E9EEF6", color: "#74777C" }}
+          style={{ backgroundColor: "#E9EEF6", color: "#3B4953" }}
         >
           Previous
         </button>
-        <span className="text-sm px-3" style={{ color: "#74777C" }}>
+        <span className="text-sm px-3" style={{ color: "#3B4953" }}>
           Page {currentPage} of {filteredTotalPages || 1}
         </span>
         <button
           onClick={() => setCurrentPage((prev) => prev + 1)}
           disabled={currentPage >= filteredTotalPages}
           className="px-3 py-1 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-80"
-          style={{ backgroundColor: "#E9EEF6", color: "#74777C" }}
+          style={{ backgroundColor: "#E9EEF6", color: "#3B4953" }}
         >
           Next
         </button>
@@ -381,7 +381,7 @@ export default function App() {
           onClick={() => setCurrentPage(filteredTotalPages)}
           disabled={currentPage >= filteredTotalPages}
           className="px-3 py-1 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-80"
-          style={{ backgroundColor: "#E9EEF6", color: "#74777C" }}
+          style={{ backgroundColor: "#E9EEF6", color: "#3B4953" }}
         >
           Last
         </button>
@@ -397,7 +397,7 @@ export default function App() {
         <div className="flex items-center justify-center py-12">
           <div className="text-center space-y-4">
             <div className="w-12 h-12 border-4 border-neutral-300 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-            <p className="text-sm" style={{ color: "#74777C" }}>
+            <p className="text-sm" style={{ color: "#3B4953" }}>
               Loading analysis...
             </p>
           </div>
@@ -500,7 +500,7 @@ export default function App() {
                         <div className="flex items-center justify-between">
                           <span
                             className="text-sm font-medium"
-                            style={{ color: "#74777C" }}
+                            style={{ color: "#3B4953" }}
                           >
                             Risk Score
                           </span>
@@ -535,7 +535,7 @@ export default function App() {
                         <div className="flex items-center justify-between">
                           <span
                             className="text-sm font-medium"
-                            style={{ color: "#74777C" }}
+                            style={{ color: "#3B4953" }}
                           >
                             Confidence
                           </span>
@@ -569,7 +569,7 @@ export default function App() {
                       >
                         Reason
                       </h4>
-                      <p className="text-sm" style={{ color: "#74777C" }}>
+                      <p className="text-sm" style={{ color: "#3B4953" }}>
                         {finalDecision.reason}
                       </p>
                     </div>
@@ -583,7 +583,7 @@ export default function App() {
                         >
                           Additional Notes
                         </h4>
-                        <p className="text-sm" style={{ color: "#74777C" }}>
+                        <p className="text-sm" style={{ color: "#3B4953" }}>
                           {finalDecision.notes}
                         </p>
                       </div>
@@ -595,7 +595,7 @@ export default function App() {
                 {markdown && (
                   <div
                     className="max-w-none markdown-analysis"
-                    style={{ color: "#74777C" }}
+                    style={{ color: "#3B4953" }}
                   >
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {stripCodeBlocks(markdown) || markdown}
@@ -608,18 +608,18 @@ export default function App() {
                   className="p-4 rounded"
                   style={{ backgroundColor: "#E9EEF6" }}
                 >
-                  <p className="text-sm" style={{ color: "#74777C" }}>
+                  <p className="text-sm" style={{ color: "#3B4953" }}>
                     <strong>Transaction ID:</strong>{" "}
                     {selectedTransaction.transaction_id}
                   </p>
-                  <p className="text-sm mt-2" style={{ color: "#74777C" }}>
+                  <p className="text-sm mt-2" style={{ color: "#3B4953" }}>
                     <strong>Current Status:</strong>{" "}
                     {selectedTransaction.approval_status}
                   </p>
                 </div>
               </>
             ) : (
-              <p style={{ color: "#74777C" }}>
+              <p style={{ color: "#3B4953" }}>
                 No analysis available for this transaction. Please run the
                 compliance analysis first.
               </p>
@@ -633,7 +633,7 @@ export default function App() {
             {analysisData?.payee_analysis ? (
               <div
                 className="max-w-none markdown-analysis"
-                style={{ color: "#74777C" }}
+                style={{ color: "#3B4953" }}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {stripCodeBlocks(analysisData.payee_analysis) ||
@@ -641,12 +641,12 @@ export default function App() {
                 </ReactMarkdown>
               </div>
             ) : (
-              <p style={{ color: "#74777C" }}>
+              <p style={{ color: "#3B4953" }}>
                 No payee analysis available for this transaction.
               </p>
             )}
             <div className="p-4 rounded" style={{ backgroundColor: "#E9EEF6" }}>
-              <p className="text-sm" style={{ color: "#74777C" }}>
+              <p className="text-sm" style={{ color: "#3B4953" }}>
                 <strong>Country:</strong>{" "}
                 {selectedTransaction.payee_country || "N/A"}
               </p>
@@ -659,7 +659,7 @@ export default function App() {
             {analysisData?.payer_analysis ? (
               <div
                 className="max-w-none markdown-analysis"
-                style={{ color: "#74777C" }}
+                style={{ color: "#3B4953" }}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {stripCodeBlocks(analysisData.payer_analysis) ||
@@ -667,12 +667,12 @@ export default function App() {
                 </ReactMarkdown>
               </div>
             ) : (
-              <p style={{ color: "#74777C" }}>
+              <p style={{ color: "#3B4953" }}>
                 No payer analysis available for this transaction.
               </p>
             )}
             <div className="p-4 rounded" style={{ backgroundColor: "#E9EEF6" }}>
-              <p className="text-sm" style={{ color: "#74777C" }}>
+              <p className="text-sm" style={{ color: "#3B4953" }}>
                 <strong>Country:</strong>{" "}
                 {selectedTransaction.vendor_country || "N/A"}
               </p>
@@ -685,7 +685,7 @@ export default function App() {
             {analysisData?.geopolitical_analysis ? (
               <div
                 className="max-w-none markdown-analysis"
-                style={{ color: "#74777C" }}
+                style={{ color: "#3B4953" }}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {stripCodeBlocks(analysisData.geopolitical_analysis) ||
@@ -693,12 +693,12 @@ export default function App() {
                 </ReactMarkdown>
               </div>
             ) : (
-              <p style={{ color: "#74777C" }}>
+              <p style={{ color: "#3B4953" }}>
                 No geopolitical analysis available for this transaction.
               </p>
             )}
             <div className="p-4 rounded" style={{ backgroundColor: "#E9EEF6" }}>
-              <p className="text-sm" style={{ color: "#74777C" }}>
+              <p className="text-sm" style={{ color: "#3B4953" }}>
                 <strong>Route:</strong> {selectedTransaction.payee_country} →{" "}
                 {selectedTransaction.vendor_country}
               </p>
@@ -711,7 +711,7 @@ export default function App() {
             {analysisData?.transaction_analysis ? (
               <div
                 className="max-w-none markdown-analysis"
-                style={{ color: "#74777C" }}
+                style={{ color: "#3B4953" }}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {stripCodeBlocks(analysisData.transaction_analysis) ||
@@ -719,7 +719,7 @@ export default function App() {
                 </ReactMarkdown>
               </div>
             ) : (
-              <p style={{ color: "#74777C" }}>
+              <p style={{ color: "#3B4953" }}>
                 No transaction analysis available.
               </p>
             )}
@@ -774,7 +774,7 @@ export default function App() {
       >
         <div className="text-center space-y-4">
           <div className="w-16 h-16 border-4 border-neutral-300 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-          <p className="text-xl" style={{ color: "#74777C" }}>
+          <p className="text-xl" style={{ color: "#3B4953" }}>
             Loading transactions...
           </p>
         </div>
@@ -811,21 +811,21 @@ export default function App() {
         {activeView === "verify" ? (
           <VerifyView messages={chatMessages} setMessages={setChatMessages} />
         ) : (
-          <div className="p-6 flex">
+          <div className="p-8 flex">
             <div
               className={`transition-all duration-300 ${
                 selectedTransaction ? "mr-[500px]" : "mr-0"
               } flex-1`}
             >
               <div className="max-w-7xl mx-auto">
-                <div className="mb-6">
-                  <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <div className="my-8 px-4">
+                  <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                     Payment Compliance Dashboard
                   </h1>
                   <div className="flex items-center justify-between">
                     <div
                       className="flex items-center gap-4"
-                      style={{ color: "#74777C" }}
+                      style={{ color: "#3B4953" }}
                     >
                       <p>
                         Total:{" "}
@@ -853,7 +853,7 @@ export default function App() {
                       <button
                         onClick={() => setShowFilters(!showFilters)}
                         className="flex items-center gap-2 px-4 py-2 rounded transition-all hover:opacity-80"
-                        style={{ backgroundColor: "#E9EEF6", color: "#74777C" }}
+                        style={{ backgroundColor: "#E9EEF6", color: "#3B4953" }}
                       >
                         <Filter className="w-4 h-4" />
                         Filters
@@ -873,7 +873,7 @@ export default function App() {
                         onClick={fetchTransactions}
                         disabled={isRefreshing}
                         className="flex items-center gap-2 px-4 py-2 rounded transition-all hover:opacity-80 disabled:opacity-50"
-                        style={{ backgroundColor: "#E9EEF6", color: "#74777C" }}
+                        style={{ backgroundColor: "#E9EEF6", color: "#3B4953" }}
                       >
                         <RefreshCw
                           className={`w-4 h-4 ${
@@ -905,7 +905,7 @@ export default function App() {
                       <button
                         onClick={resetFilters}
                         className="flex items-center gap-2 px-3 py-1 text-sm rounded transition-all hover:opacity-80"
-                        style={{ backgroundColor: "#E9EEF6", color: "#74777C" }}
+                        style={{ backgroundColor: "#E9EEF6", color: "#3B4953" }}
                         disabled={activeFilterCount === 0}
                       >
                         <FilterX className="w-4 h-4" />
@@ -917,7 +917,7 @@ export default function App() {
                       <div>
                         <label
                           className="block text-sm mb-2"
-                          style={{ color: "#74777C" }}
+                          style={{ color: "#3B4953" }}
                         >
                           Search Transaction ID
                         </label>
@@ -941,7 +941,7 @@ export default function App() {
                       <div>
                         <label
                           className="block text-sm mb-2"
-                          style={{ color: "#74777C" }}
+                          style={{ color: "#3B4953" }}
                         >
                           Status
                         </label>
@@ -970,7 +970,7 @@ export default function App() {
                       <div>
                         <label
                           className="block text-sm mb-2"
-                          style={{ color: "#74777C" }}
+                          style={{ color: "#3B4953" }}
                         >
                           Payee Country (From)
                         </label>
@@ -1002,7 +1002,7 @@ export default function App() {
                       <div>
                         <label
                           className="block text-sm mb-2"
-                          style={{ color: "#74777C" }}
+                          style={{ color: "#3B4953" }}
                         >
                           Vendor Country (To)
                         </label>
@@ -1034,7 +1034,7 @@ export default function App() {
                       <div>
                         <label
                           className="block text-sm mb-2"
-                          style={{ color: "#74777C" }}
+                          style={{ color: "#3B4953" }}
                         >
                           Payment Method
                         </label>
@@ -1066,7 +1066,7 @@ export default function App() {
                       <div>
                         <label
                           className="block text-sm mb-2"
-                          style={{ color: "#74777C" }}
+                          style={{ color: "#3B4953" }}
                         >
                           Min Amount
                         </label>
@@ -1093,7 +1093,7 @@ export default function App() {
                       <div>
                         <label
                           className="block text-sm mb-2"
-                          style={{ color: "#74777C" }}
+                          style={{ color: "#3B4953" }}
                         >
                           Max Amount
                         </label>
@@ -1139,49 +1139,49 @@ export default function App() {
                         <tr>
                           <th
                             className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                            style={{ color: "#74777C" }}
+                            style={{ color: "#3B4953" }}
                           >
                             Transaction ID
                           </th>
                           <th
                             className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                            style={{ color: "#74777C" }}
+                            style={{ color: "#3B4953" }}
                           >
                             Status
                           </th>
                           <th
                             className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                            style={{ color: "#74777C" }}
+                            style={{ color: "#3B4953" }}
                           >
                             Amount
                           </th>
                           <th
                             className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                            style={{ color: "#74777C" }}
+                            style={{ color: "#3B4953" }}
                           >
                             Payment Method
                           </th>
                           <th
                             className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                            style={{ color: "#74777C" }}
+                            style={{ color: "#3B4953" }}
                           >
                             Countries
                           </th>
                           <th
                             className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                            style={{ color: "#74777C" }}
+                            style={{ color: "#3B4953" }}
                           >
                             Purpose
                           </th>
                           <th
                             className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                            style={{ color: "#74777C" }}
+                            style={{ color: "#3B4953" }}
                           >
                             Payment Time
                           </th>
                           <th
                             className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                            style={{ color: "#74777C" }}
+                            style={{ color: "#3B4953" }}
                           >
                             Actions
                           </th>
@@ -1211,23 +1211,23 @@ export default function App() {
                             </td>
                             <td
                               className="px-6 py-4 whitespace-nowrap text-sm"
-                              style={{ color: "#74777C" }}
+                              style={{ color: "#3B4953" }}
                             >
-                              {transaction.amount
+                              {transaction.payment_amount
                                 ? `${
                                     transaction.currency || ""
-                                  } ${transaction.amount.toLocaleString()}`
+                                  } ${transaction.payment_amount.toLocaleString()}`
                                 : "N/A"}
                             </td>
                             <td
                               className="px-6 py-4 whitespace-nowrap text-sm"
-                              style={{ color: "#74777C" }}
+                              style={{ color: "#3B4953" }}
                             >
                               {transaction.payment_method || "N/A"}
                             </td>
                             <td
                               className="px-6 py-4 text-sm"
-                              style={{ color: "#74777C" }}
+                              style={{ color: "#3B4953" }}
                             >
                               <div className="flex flex-col">
                                 <span>
@@ -1240,13 +1240,13 @@ export default function App() {
                             </td>
                             <td
                               className="px-6 py-4 text-sm"
-                              style={{ color: "#74777C" }}
+                              style={{ color: "#3B4953" }}
                             >
                               {transaction.payment_purpose || "N/A"}
                             </td>
                             <td
                               className="px-6 py-4 whitespace-nowrap text-sm"
-                              style={{ color: "#74777C" }}
+                              style={{ color: "#3B4953" }}
                             >
                               {transaction.payment_time || "N/A"}
                             </td>
@@ -1259,7 +1259,7 @@ export default function App() {
                                 className="p-2 rounded transition-all hover:opacity-80"
                                 style={{
                                   backgroundColor: "#E9EEF6",
-                                  color: "#74777C"
+                                  color: "#3B4953"
                                 }}
                                 title="Analyze Transaction"
                               >
@@ -1275,7 +1275,7 @@ export default function App() {
 
                 {filteredPaginatedTransactions.length === 0 && !isLoading && (
                   <div className="text-center mt-8">
-                    <p style={{ color: "#74777C" }}>
+                    <p style={{ color: "#3B4953" }}>
                       {activeFilterCount > 0
                         ? "No transactions match the current filters"
                         : "No transactions found"}
@@ -1284,7 +1284,7 @@ export default function App() {
                       <button
                         onClick={resetFilters}
                         className="mt-4 px-4 py-2 rounded transition-all hover:opacity-80"
-                        style={{ backgroundColor: "#E9EEF6", color: "#74777C" }}
+                        style={{ backgroundColor: "#E9EEF6", color: "#3B4953" }}
                       >
                         Clear Filters
                       </button>
@@ -1329,7 +1329,7 @@ export default function App() {
                     <button
                       onClick={() => setSelectedTransaction(null)}
                       className="p-2 rounded transition-all hover:opacity-80"
-                      style={{ backgroundColor: "#FFFFFF", color: "#74777C" }}
+                      style={{ backgroundColor: "#FFFFFF", color: "#3B4953" }}
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -1388,7 +1388,7 @@ export default function App() {
                         onClick={() => setActiveTab(tab.id as TabType)}
                         className="flex-1 px-4 py-3 text-sm font-medium transition-all"
                         style={{
-                          color: activeTab === tab.id ? "#3b82f6" : "#74777C",
+                          color: activeTab === tab.id ? "#3b82f6" : "#3B4953",
                           borderBottom:
                             activeTab === tab.id
                               ? "2px solid #3b82f6"

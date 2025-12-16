@@ -6,8 +6,8 @@
 }
 
 body {
-  background-color: #f0f4f8;
-  color: #74777c;
+  background-color: #f8fafb;
+  color: #3b4953;
   margin: 0;
   padding: 0;
 }
@@ -107,14 +107,14 @@ h6 {
 }
 
 .markdown-analysis p {
-  color: #74777c !important;
+  color: #3b4953 !important;
   margin-bottom: 1rem !important;
   line-height: 1.6 !important;
 }
 
 .markdown-analysis ul,
 .markdown-analysis ol {
-  color: #74777c !important;
+  color: #3b4953 !important;
   margin-left: 1.5rem !important;
   margin-bottom: 1rem !important;
   line-height: 1.6 !important;
@@ -129,7 +129,7 @@ h6 {
 }
 
 .markdown-analysis li {
-  color: #74777c !important;
+  color: #3b4953 !important;
   margin-bottom: 0.5rem !important;
 }
 
@@ -139,7 +139,7 @@ h6 {
 }
 
 .markdown-analysis em {
-  color: #74777c !important;
+  color: #3b4953 !important;
   font-style: italic !important;
 }
 
@@ -154,7 +154,7 @@ h6 {
 
 .markdown-analysis pre {
   background-color: #e9eef6 !important;
-  color: #74777c !important;
+  color: #3b4953 !important;
   padding: 1rem !important;
   border-radius: 0.5rem !important;
   overflow-x: auto !important;
@@ -171,7 +171,7 @@ h6 {
   border-left: 4px solid #60a5fa !important;
   padding-left: 1rem !important;
   margin: 1rem 0 !important;
-  color: #74777c !important;
+  color: #3b4953 !important;
   font-style: italic !important;
 }
 
@@ -192,7 +192,7 @@ h6 {
   border: 1px solid #d0d5dd !important;
   padding: 0.5rem !important;
   text-align: left !important;
-  color: #74777c !important;
+  color: #3b4953 !important;
 }
 
 .markdown-analysis th {

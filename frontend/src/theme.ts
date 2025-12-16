@@ -10,12 +10,12 @@ export const theme = createTheme({
       main: "#a855f7" // purple-500
     },
     background: {
-      default: "#F0F4F8", // light background
+      default: "#F8FAFB", // light background
       paper: "#FFFFFF" // white paper
     },
     text: {
       primary: "#000000", // black for headers
-      secondary: "#74777C" // normal text color
+      secondary: "#3B4953" // normal text color
     },
     divider: "#D0D5DD" // light border color
   },

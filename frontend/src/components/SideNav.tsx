@@ -31,8 +31,11 @@ export function SideNav({ activeView, onViewChange }: SideNavProps) {
       {/* Logo/Brand */}
       <div className="mb-8">
         <div
-          className="w-12 h-12 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "#E9EEF6" }}
+          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)"
+          }}
         >
           <span className="text-2xl">🛡️</span>
         </div>
@@ -51,20 +54,21 @@ export function SideNav({ activeView, onViewChange }: SideNavProps) {
               className="flex flex-col items-center gap-2 px-3 py-3 rounded-lg transition-all group relative"
               style={{
                 backgroundColor: isActive ? "#E9EEF6" : "transparent",
-                color: isActive ? "#3b82f6" : "#74777C"
+                color: isActive ? "#3b82f6" : "#3B4953",
+                border: isActive ? "1px solid #C7D2FE" : "1px solid transparent"
               }}
               title={item.label}
             >
               <Icon
                 className="w-6 h-6 transition-transform group-hover:scale-110"
                 style={{
-                  color: isActive ? "#3b82f6" : "#74777C"
+                  color: isActive ? "#3b82f6" : "#3B4953"
                 }}
               />
               <span
                 className="text-xs font-medium"
                 style={{
-                  color: isActive ? "#3b82f6" : "#74777C"
+                  color: isActive ? "#3b82f6" : "#3B4953"
                 }}
               >
                 {item.label}

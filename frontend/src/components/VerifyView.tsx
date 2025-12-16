@@ -105,7 +105,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
           <h2 className="text-2xl font-bold" style={{ color: "#000000" }}>
             Transaction Verification Agent
           </h2>
-          <p className="text-sm mt-1" style={{ color: "#74777C" }}>
+          <p className="text-sm mt-1" style={{ color: "#3B4953" }}>
             Chat with the AI agent to verify and analyze transactions
           </p>
         </div>
@@ -113,7 +113,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
           <button
             onClick={handleClearChat}
             className="flex items-center gap-2 px-4 py-2 rounded transition-all hover:opacity-80"
-            style={{ backgroundColor: "#E9EEF6", color: "#74777C" }}
+            style={{ backgroundColor: "#E9EEF6", color: "#3B4953" }}
             title="Clear conversation"
           >
             <Trash2 className="w-4 h-4" />
@@ -138,17 +138,15 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
             >
               Welcome to Transaction Verification
             </h3>
-            <p className="text-center max-w-md" style={{ color: "#74777C" }}>
+            <p className="text-center max-w-md" style={{ color: "#3B4953" }}>
               Ask me to analyze transactions, check compliance, or verify
               payment details. I can help you understand risk factors and make
               informed decisions.
             </p>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
               {[
-                "Analyze transaction TXN_001",
-                "Check compliance for payment to Canada",
-                "What are the risk factors?",
-                "Verify vendor information"
+                "Analyze transaction 17a3fbcb-7b3f-4984-a384-0f9be1057895",
+                "I think this transaction looks suspicious, can you verify?"
               ].map((suggestion, index) => (
                 <button
                   key={index}
@@ -156,7 +154,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                   className="px-4 py-3 rounded text-left text-sm transition-all hover:opacity-80"
                   style={{
                     backgroundColor: "#FFFFFF",
-                    color: "#74777C",
+                    color: "#3B4953",
                     border: "1px solid #D0D5DD"
                   }}
                 >
@@ -211,7 +209,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                 <p
                   className="text-xs mt-2 opacity-70"
                   style={{
-                    color: message.role === "user" ? "#E0E7FF" : "#74777C"
+                    color: message.role === "user" ? "#E0E7FF" : "#3B4953"
                   }}
                 >
                   {message.timestamp.toLocaleTimeString()}
@@ -257,7 +255,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                     className="w-3 h-3 animate-spin"
                     style={{ color: "#3b82f6" }}
                   />
-                  <p className="text-xs" style={{ color: "#74777C" }}>
+                  <p className="text-xs" style={{ color: "#3B4953" }}>
                     Thinking...
                   </p>
                 </div>

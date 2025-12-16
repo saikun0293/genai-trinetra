@@ -96,8 +96,7 @@ Create a well-structured Markdown report for machine-readability (plain Markdown
 4. **No Placeholders**: Do not use "N/A", "Data unavailable", or empty sections; if a tool returns no data, state that explicitly with the tool's actual response
 5. **Conciseness**: Keep report under 500 words; focus on actionable insights
 6. **Machine-Readable**: Use consistent formatting so downstream agents can parse sections
-7. **State Persistence**: Always end with `upsert_state(key='payee_agent', value=<full_report>)`
-8. **Plain Markdown Only**: Do not wrap the report in backticks or code fences; output raw Markdown text
+7. **Plain Markdown Only**: Do not wrap the report in backticks or code fences; output raw Markdown text
 
 ## EXECUTION ORDER - STRICT SEQUENCE
 
@@ -109,7 +108,6 @@ Create a well-structured Markdown report for machine-readability (plain Markdown
 4. **CALL** `analyze_temporal_patterns(vendor_id)` → Wait for result
 5. Verify you have outputs from all three tools
 6. Synthesize findings from all three tool outputs into the structured Markdown report
-7. **CALL** `upsert_state(key='payee_agent', value=<full_report>)` to persist
 
 **Pre-synthesis checklist** (confirm before creating report):
 - ✓ analyze_vendor_patterns was called and returned data

@@ -5,6 +5,7 @@ from google.adk.apps.app import App
 from google.adk.agents import LlmAgent
 from google.cloud import bigquery
 from google.adk.tools import FunctionTool
+from app.sub_agents.utils import create_analysis_callback
 from .prompt import TRANSACTION_AGENT_PROMPT
 
 # Configure logging
@@ -94,13 +95,12 @@ def analyze_transaction_frequency(
 
 transaction_agent = LlmAgent(
     name="transaction_agent",
-    # Provide a default model to prevent errors if the env var is not set.
     model=os.environ.get("ADK_MODEL", "gemini-2.5-pro"),
     description="Analyzes transaction data to calculate the frequency of approved and rejected transactions for the current payer, vendor involved",
     instruction=TRANSACTION_AGENT_PROMPT,
     tools=[FunctionTool(analyze_transaction_frequency)],
     output_key="transaction_agent",
-    #include_contents='none'  # Don't respond to user directly, only write to state
+    after_agent_callback=create_analysis_callback("transaction_analysis", "transaction_agent")  # Store in BigQuery
 )
 
 logger.info("Transaction agent initialized successfully")

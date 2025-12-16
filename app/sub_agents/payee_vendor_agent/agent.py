@@ -5,12 +5,12 @@ from google.adk.agents import LlmAgent
 from google.adk.agents.callback_context import CallbackContext
 from app.sub_agents.bigquery_agent.agent import bigquery_agent
 from app.sub_agents.payee_vendor_agent.tools import (
-    upsert_state,
     get_vendor_for_payee,
     analyze_vendor_patterns,
     identify_suspicious_payers,
     analyze_temporal_patterns,
 )
+from app.sub_agents.utils import create_analysis_callback
 from .prompt import PAYEE_VENDOR_PROMPT
 
 # Configure logging
@@ -35,9 +35,8 @@ payee_agent = LlmAgent(
         analyze_vendor_patterns,
         identify_suspicious_payers,
         analyze_temporal_patterns,
-        upsert_state,
     ],
-    include_contents='none'  # Don't respond to user directly, only write to state
+    after_agent_callback=create_analysis_callback("payee_analysis", "payee_agent")
 )
 
 logger.info("Payee vendor agent initialized successfully") 

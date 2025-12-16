@@ -15,7 +15,7 @@
 import logging
 from google.adk.agents import LlmAgent
 from google.adk.models import Gemini
-
+from app.sub_agents.utils import create_critique_callback
 from .prompt import CRITIQUE_AGENT_PROMPT
 
 logging.basicConfig(
@@ -33,10 +33,8 @@ critique_agent = LlmAgent(
     name="critique_scoring_agent",
     model=Gemini(model="gemini-2.5-pro"),
     instruction=CRITIQUE_AGENT_PROMPT,
-
-    # Single canonical output state for downstream consumers
-    output_key="risk_assessment_state",
-
+    output_key="compliance_critique",
+    after_agent_callback=create_critique_callback("critic_analysis", "compliance_critique")  # Store in BigQuery and update approval status
 )
 
 logger.info("critique scoring agent initialized successfully")

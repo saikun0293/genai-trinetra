@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Testing
+tests/
+notebooks/
+.pytest_cache/
+
+# Documentation
+*.md
+docs/
+
+# Frontend
+frontend/
+
+# Deployment
+deployment/
+.cloudbuild/
+
+# Misc
+.env
+sessions.db
+*.log
+context/

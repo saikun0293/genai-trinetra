@@ -12,7 +12,7 @@ from google.genai import types as genai_types
 logger = logging.getLogger(__name__)
 
 # Initialize BigQuery client
-bq_client = bigquery.Client()
+bq_client = bigquery.Client(project="ccibt-hack25ww7-714")
 BQ_ANALYSIS_TABLE_ID = "ccibt-hack25ww7-714.tri_netra_payments.TransactionAnalysis"
 BQ_COMPLIANCE_TABLE_ID = "ccibt-hack25ww7-714.tri_netra_payments.PaymentsCompliance"
 

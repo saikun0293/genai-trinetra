@@ -1186,6 +1186,26 @@ wheels = [
 ]
 
 [[package]]
+name = "google-cloud-pubsub"
+version = "2.33.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core", extra = ["grpc"] },
+    { name = "google-auth" },
+    { name = "grpc-google-iam-v1" },
+    { name = "grpcio" },
+    { name = "grpcio-status" },
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-sdk" },
+    { name = "proto-plus" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a1/dd/6e016dc4c893b8a7eee9f5a4ca8659a886164580bfb129b744f47aff1cde/google_cloud_pubsub-2.33.0.tar.gz", hash = "sha256:83bc50c54f669efb924ad21385bc7092fa11f7576eabef3d0b4d7aa8efa90aa6", size = 393962, upload-time = "2025-10-30T20:13:08.226Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/35/6f341d8b2e94cb61b6ead415e582e3fd697472ccef9bc3972c6d83e6273f/google_cloud_pubsub-2.33.0-py3-none-any.whl", hash = "sha256:d7af3b6448c9adc171f677a989dafb4c67df6112140bd4633f4bf7e3ebe67aa0", size = 321254, upload-time = "2025-10-30T20:13:06.37Z" },
+]
+
+[[package]]
 name = "google-cloud-resource-manager"
 version = "1.15.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1541,6 +1561,64 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/01/ee/02a2c011bdab74c6fb3c75474d40b3052059d95df7e73351460c8588d963/h11-0.16.0.tar.gz", hash = "sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1", size = 101250, upload-time = "2025-04-24T03:35:25.427Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl", hash = "sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86", size = 37515, upload-time = "2025-04-24T03:35:24.344Z" },
+]
+
+[[package]]
+name = "hackathon-agent"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "gcsfs" },
+    { name = "google-adk" },
+    { name = "google-cloud-aiplatform", extra = ["agent-engines", "evaluation"] },
+    { name = "google-cloud-logging" },
+    { name = "google-cloud-pubsub" },
+    { name = "opentelemetry-instrumentation-google-genai" },
+    { name = "protobuf" },
+]
+
+[package.optional-dependencies]
+jupyter = [
+    { name = "jupyter" },
+]
+lint = [
+    { name = "codespell" },
+    { name = "mypy" },
+    { name = "ruff" },
+    { name = "types-pyyaml" },
+    { name = "types-requests" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "nest-asyncio" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "codespell", marker = "extra == 'lint'", specifier = ">=2.2.0,<3.0.0" },
+    { name = "gcsfs", specifier = ">=2024.11.0" },
+    { name = "google-adk", specifier = ">=1.15.0,<2.0.0" },
+    { name = "google-cloud-aiplatform", extras = ["evaluation", "agent-engines"], specifier = ">=1.118.0,<2.0.0" },
+    { name = "google-cloud-logging", specifier = ">=3.12.0,<4.0.0" },
+    { name = "google-cloud-pubsub", specifier = ">=2.33.0" },
+    { name = "jupyter", marker = "extra == 'jupyter'", specifier = ">=1.0.0,<2.0.0" },
+    { name = "mypy", marker = "extra == 'lint'", specifier = ">=1.15.0,<2.0.0" },
+    { name = "opentelemetry-instrumentation-google-genai", specifier = ">=0.1.0,<1.0.0" },
+    { name = "protobuf", specifier = ">=6.31.1,<7.0.0" },
+    { name = "ruff", marker = "extra == 'lint'", specifier = ">=0.4.6,<1.0.0" },
+    { name = "types-pyyaml", marker = "extra == 'lint'", specifier = ">=6.0.12.20240917,<7.0.0" },
+    { name = "types-requests", marker = "extra == 'lint'", specifier = ">=2.32.0.20240914,<3.0.0" },
+]
+provides-extras = ["jupyter", "lint"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "nest-asyncio", specifier = ">=1.6.0,<2.0.0" },
+    { name = "pytest", specifier = ">=8.3.4,<9.0.0" },
+    { name = "pytest-asyncio", specifier = ">=0.23.8,<1.0.0" },
 ]
 
 [[package]]
@@ -2228,62 +2306,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/85/b8/357544534bef87dd2858432f3cbd3a0e5cc267caebca5ea86b03618786c5/litellm-1.80.5.tar.gz", hash = "sha256:922791c264845d9ed59e540c8fa74a74d237c1b209568a05ffeacd8b51770deb", size = 11885764, upload-time = "2025-11-22T23:41:42.25Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bd/af/1d4693746ff9fbbe27a6e7d6394b801acf234e00c83f45ad1cb5bf2eaa6c/litellm-1.80.5-py3-none-any.whl", hash = "sha256:2ac5f4e88cd57ae056e00da8f872e1c2956653750929fba2fd9b007b400fdb77", size = 10671970, upload-time = "2025-11-22T23:41:39.923Z" },
-]
-
-[[package]]
-name = "hackathon-agent"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "gcsfs" },
-    { name = "google-adk" },
-    { name = "google-cloud-aiplatform", extra = ["agent-engines", "evaluation"] },
-    { name = "google-cloud-logging" },
-    { name = "opentelemetry-instrumentation-google-genai" },
-    { name = "protobuf" },
-]
-
-[package.optional-dependencies]
-jupyter = [
-    { name = "jupyter" },
-]
-lint = [
-    { name = "codespell" },
-    { name = "mypy" },
-    { name = "ruff" },
-    { name = "types-pyyaml" },
-    { name = "types-requests" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "nest-asyncio" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "codespell", marker = "extra == 'lint'", specifier = ">=2.2.0,<3.0.0" },
-    { name = "gcsfs", specifier = ">=2024.11.0" },
-    { name = "google-adk", specifier = ">=1.15.0,<2.0.0" },
-    { name = "google-cloud-aiplatform", extras = ["evaluation", "agent-engines"], specifier = ">=1.118.0,<2.0.0" },
-    { name = "google-cloud-logging", specifier = ">=3.12.0,<4.0.0" },
-    { name = "jupyter", marker = "extra == 'jupyter'", specifier = ">=1.0.0,<2.0.0" },
-    { name = "mypy", marker = "extra == 'lint'", specifier = ">=1.15.0,<2.0.0" },
-    { name = "opentelemetry-instrumentation-google-genai", specifier = ">=0.1.0,<1.0.0" },
-    { name = "protobuf", specifier = ">=6.31.1,<7.0.0" },
-    { name = "ruff", marker = "extra == 'lint'", specifier = ">=0.4.6,<1.0.0" },
-    { name = "types-pyyaml", marker = "extra == 'lint'", specifier = ">=6.0.12.20240917,<7.0.0" },
-    { name = "types-requests", marker = "extra == 'lint'", specifier = ">=2.32.0.20240914,<3.0.0" },
-]
-provides-extras = ["jupyter", "lint"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "nest-asyncio", specifier = ">=1.6.0,<2.0.0" },
-    { name = "pytest", specifier = ">=8.3.4,<9.0.0" },
-    { name = "pytest-asyncio", specifier = ">=0.23.8,<1.0.0" },
 ]
 
 [[package]]

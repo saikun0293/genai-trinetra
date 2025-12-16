@@ -99,16 +99,19 @@ Your analysis MUST be formatted in **Markdown** with the following structure. Ke
 **Payee Country**: [Country Name]
 - **Key Findings**: [2-3 most important findings from search]
 - **Sanctions/Restrictions**: [Yes/No with brief details if applicable]
+- **Sources**: [Link1](URL1), [Link2](URL2)
 
 **Vendor Country**: [Country Name]
 - **Key Findings**: [2-3 most important findings from search]
 - **Cross-Border Risks**: [Only if significant risks identified]
+- **Sources**: [Link1](URL1), [Link2](URL2)
 
 ## 💳 Payment Method Analysis
 **Method**: [Payment Method]
 - **Security Status**: [Brief current status]
 - **Compliance**: [Compliant/Concerns - key points only]
 - **Notable Risks**: [Only list if significant risks found]
+- **Sources**: [Link1](URL1), [Link2](URL2)
 
 ## ⏰ Approval Time Analysis
 **Time to Approval**: [X minutes]
@@ -121,6 +124,7 @@ Your analysis MUST be formatted in **Markdown** with the following structure. Ke
 **Stated Purpose**: [Payment Purpose]
 - **Legitimacy**: [Brief assessment]
 - **Notable Risks**: [Only if significant patterns found]
+- **Sources**: [Link1](URL1), [Link2](URL2)
 
 ## 📊 Overall Assessment
 **Critical Findings**: [2-4 bullet points of most important findings only]
@@ -133,7 +137,11 @@ Your analysis MUST be formatted in **Markdown** with the following structure. Ke
 *Analysis based on searches conducted on {datetime.datetime.now().strftime("%Y-%m-%d")}*
 ```
 
-**IMPORTANT**: Keep each section concise. Focus on actionable insights and critical risks only. Omit sections or details that show no significant concerns.
+**IMPORTANT**: 
+- Keep each section concise. Focus on actionable insights and critical risks only. 
+- **Include source links**: For each section where you found information through searches, add a "Sources" line with markdown links to the articles you referenced. Format: `[Article Title](URL)` or `[Source 1](URL1), [Source 2](URL2)`
+- Only include sources that were actually used in your analysis
+- Omit sections or details that show no significant concerns.
 
 ---
 ### CRITICAL INSTRUCTIONS

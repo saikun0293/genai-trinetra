@@ -728,23 +728,8 @@ export default function App() {
     }
   }
 
-  const getRowColor = (status: string) => {
-    const normalizedStatus = status?.toLowerCase() || ""
-
-    if (
-      normalizedStatus.includes("approved") ||
-      normalizedStatus === "approved"
-    ) {
-      return { backgroundColor: "#E6F4EA", borderBottom: "1px solid #D0D5DD" }
-    } else if (
-      normalizedStatus.includes("review") ||
-      normalizedStatus === "in review" ||
-      normalizedStatus === "pending"
-    ) {
-      return { backgroundColor: "#FEF7E0", borderBottom: "1px solid #D0D5DD" }
-    } else {
-      return { backgroundColor: "#FCE8E8", borderBottom: "1px solid #D0D5DD" }
-    }
+  const getRowColor = () => {
+    return { backgroundColor: "#FFFFFF", borderBottom: "1px solid #D0D5DD" }
   }
 
   const getStatusBadgeColor = (status: string) => {
@@ -819,7 +804,10 @@ export default function App() {
             >
               <div className="max-w-7xl mx-auto">
                 <div className="my-8 px-4">
-                  <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <h1
+                    className="font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+                    style={{ fontSize: "2.5rem" }}
+                  >
                     Payment Compliance Dashboard
                   </h1>
                   <div className="flex items-center justify-between">
@@ -1192,7 +1180,7 @@ export default function App() {
                           <tr
                             key={transaction.transaction_id}
                             className="transition-colors hover:opacity-80"
-                            style={getRowColor(transaction.approval_status)}
+                            style={getRowColor()}
                           >
                             <td
                               className="px-6 py-4 whitespace-nowrap text-sm font-medium"

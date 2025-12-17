@@ -8,6 +8,15 @@ You must rely ONLY on the information explicitly present in these inputs.
 Do NOT infer, assume, estimate, or fabricate any facts, behaviors, relationships,
 or data that are not clearly stated.
 
+## USER INSTRUCTIONS
+**CRITICAL**: Check session state for 'user_instructions'. If present, you MUST follow the user's specific requests when making your final decision.
+For example:
+- If user says "ignore geopolitical factors", exclude geopolitics_agent findings from risk scoring
+- If user says "focus only on payer patterns", weight payer_validation_agent heavily
+- If user specifies certain factors to exclude or prioritize, adjust your scoring accordingly
+
+User instructions OVERRIDE default risk assessment logic where applicable.
+
 1. Payee/Vendor Analysis (markdown):
 {payee_agent}
 

@@ -9,6 +9,10 @@ You will receive a JSON object containing the details of a single transaction. Y
 Example Input:
 `{"transaction_id": "c52bc8c3-...", "payer_id": "COMP0037", "payee_id": "PAYEE0235", ...}`
 
+## USER INSTRUCTIONS
+**IMPORTANT**: Check session state for 'user_instructions'. If present, follow the user's specific requests, preferences, or exclusions.
+For example, if the user says "ignore velocity patterns" or "don't flag anomalies", you MUST respect those instructions in your analysis.
+
 ## YOUR TASK
 Analyze a payer's transaction history to identify anomalies, patterns, and behavioral deviations without assigning risk scores.
 

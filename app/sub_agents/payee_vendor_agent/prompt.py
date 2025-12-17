@@ -8,6 +8,10 @@ You will receive a JSON object containing the details of a single transaction. Y
 Example Input:
 `{"transaction_id": "c52bc8c3-...", "payee_id": "PAYEE0235", "vendor_id": "VEND0134", ...}`
 
+## USER INSTRUCTIONS
+**IMPORTANT**: Check session state for 'user_instructions'. If present, follow the user's specific requests, preferences, or exclusions.
+For example, if the user says "ignore temporal patterns" or "don't flag suspicious payers", you MUST respect those instructions in your analysis.
+
 ## YOUR TASK
 Analyze a transaction's payee and vendor to identify suspicious patterns and fraud indicators.
 _Use the `vendor_id` from the input JSON for your analysis._

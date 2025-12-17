@@ -75,6 +75,22 @@ def clean_transaction_id_callback(callback_context: CallbackContext) -> None:
         logger.info(f"✓ Cleaned transaction_id: '{transaction_id}' -> '{cleaned_id}'")
 
 
+def store_user_instructions_callback(callback_context: CallbackContext) -> None:
+    """Store the original user message in session state for sub-agents to access."""
+    try:
+        if callback_context.current_turn and callback_context.current_turn.contents:
+            # Get the first user message content
+            for content in callback_context.current_turn.contents:
+                if content.role == "user" and content.parts:
+                    user_message = "".join([part.text for part in content.parts if hasattr(part, 'text') and part.text])
+                    if user_message:
+                        callback_context.session.state["user_instructions"] = user_message
+                        logger.info(f"✓ Stored user instructions in session state")
+                        break
+    except Exception as e:
+        logger.error(f"✗ Error storing user instructions: {e}")
+
+
 # Transaction ID request agent - extracts or requests transaction_id from user
 transaction_id_agent = LlmAgent(
     name="transaction_id_requester",
@@ -96,21 +112,12 @@ compliance_analyzer = ParallelAgent(
 logger.info("Compliance analyzer (parallel agent) initialized successfully")
 
 # Root agent that orchestrates the entire compliance workflow
-compliance_orchestrator = SequentialAgent(
-    name="compliance_orchestrator",
+# This is now the main sequential agent that handles everything
+root_orchestrator_agent = SequentialAgent(
+    name="root_orchestrator_agent",
     description="Orchestrates the end-to-end compliance check by first ensuring transaction_id is available, then running analysis agents in parallel, and finally synthesizing with a critique agent.",
     sub_agents=[transaction_id_agent, compliance_analyzer, critique_agent],
-)
-
-compliance_orchestrator_agent = AgentTool(agent = compliance_orchestrator)
-# Create the App instance - this is what gets loaded by ADK and deployed
-
-root_orchestrator_agent = Agent(
-    name="root_orchestrator_agent",
-    model="gemini-2.5-pro",
-    description="The main orchestrator that delegates tasks to specialist agents for compliance",
-    instruction=ROOT_ORCHESTRATOR_PROMPT,
-    tools=[fetch_transaction_by_id,compliance_orchestrator_agent]
+    before_agent_callback=store_user_instructions_callback  # Store user message before execution
 )
 
 app = App(

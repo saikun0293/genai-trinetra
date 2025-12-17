@@ -3,6 +3,7 @@ import { Send, Loader2, Trash2, User, Bot } from "lucide-react"
 import { agentService, ThinkingMessage } from "@/services/agentService"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import { ThinkingMessages, ThinkingItem } from "./ThinkingMessages"
 
 export interface ChatMessage {
   role: "user" | "assistant"
@@ -26,6 +27,9 @@ export function VerifyView({
   const [streamingText, setStreamingText] = useState("")
   const [statusMessageIndex, setStatusMessageIndex] = useState(0)
   const [agentProgress, setAgentProgress] = useState<string[]>([])
+  const [currentAnalysisItems, setCurrentAnalysisItems] = useState<
+    ThinkingItem[]
+  >([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -82,6 +86,7 @@ export function VerifyView({
     setIsLoading(true)
     setStreamingText("")
     setAgentProgress([])
+    setCurrentAnalysisItems([])
 
     try {
       const response = await agentService.sendMessage(
@@ -93,23 +98,61 @@ export function VerifyView({
           setStreamingText((prev) => prev + chunk)
         },
         undefined, // Don't track thinking messages
-        undefined // Don't handle analysis messages in chat - they're stored in BigQuery and accessed via detail view
+        (analysisMessage) => {
+          // Track analysis messages in the accordion
+          console.log("Adding analysis from:", analysisMessage.agent)
+          setCurrentAnalysisItems((prev) => [
+            ...prev,
+            {
+              agent: analysisMessage.agent,
+              message: "",
+              analysis: analysisMessage.analysis,
+              timestamp: analysisMessage.timestamp
+            }
+          ])
+        }
       )
 
       console.log("Analysis complete, response length:", response?.length || 0)
 
+      // Extract the critique_agent_response_markdown if present
+      let displayContent =
+        response ||
+        "Analysis complete. View the transaction details to see the full analysis."
+
+      if (response?.includes("critique_agent_response_markdown")) {
+        try {
+          // Extract the markdown report from the JSON response
+          const markdownMatch = response.match(
+            /"critique_agent_response_markdown":\s*"([^"]*(?:\\.[^"]*)*)"/
+          )
+          if (markdownMatch) {
+            // Unescape the JSON string
+            displayContent = markdownMatch[1]
+              .replace(/\\n/g, "\n")
+              .replace(/\\"/g, '"')
+              .replace(/\\\\/g, "\\")
+            console.log(
+              "Extracted critique markdown, length:",
+              displayContent.length
+            )
+          }
+        } catch (e) {
+          console.error("Failed to extract critique markdown:", e)
+        }
+      }
+
       // Only include meaningful response
       const assistantMessage: ChatMessage = {
         role: "assistant",
-        content:
-          response ||
-          "Analysis complete. View the transaction details to see the full analysis.",
+        content: displayContent,
         timestamp: new Date()
       }
 
       setMessages((prev) => [...prev, assistantMessage])
       setStreamingText("")
       setAgentProgress([])
+      setCurrentAnalysisItems([])
 
       // Refresh transactions if analysis was completed successfully
       if (onAnalysisComplete && response && !response.includes("error")) {
@@ -313,6 +356,11 @@ export function VerifyView({
               >
                 {streamingText ? (
                   <>
+                    {currentAnalysisItems.length > 0 && (
+                      <div className="mb-3">
+                        <ThinkingMessages items={currentAnalysisItems} />
+                      </div>
+                    )}
                     <div className="markdown-analysis max-w-none mb-3">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {streamingText}
@@ -333,6 +381,11 @@ export function VerifyView({
                   </>
                 ) : (
                   <>
+                    {currentAnalysisItems.length > 0 && (
+                      <div className="mb-3">
+                        <ThinkingMessages items={currentAnalysisItems} />
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 mb-2">
                       <Loader2
                         className="w-4 h-4 animate-spin"

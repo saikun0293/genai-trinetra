@@ -801,41 +801,6 @@ export default function App() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#F0F4F8" }}
-      >
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-neutral-300 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-          <p className="text-xl" style={{ color: "#3B4953" }}>
-            Loading transactions...
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#F0F4F8" }}
-      >
-        <div className="text-center space-y-4">
-          <p className="text-xl text-red-600">Error: {error}</p>
-          <button
-            onClick={fetchTransactions}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: "#F0F4F8" }}>
       {/* Side Navigation */}
@@ -927,6 +892,28 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+
+                {/* Error Banner */}
+                {error && (
+                  <div
+                    className="mb-4 p-4 rounded-lg flex items-center justify-between"
+                    style={{
+                      backgroundColor: "#FEE2E2",
+                      border: "1px solid #FCA5A5"
+                    }}
+                  >
+                    <p className="text-sm" style={{ color: "#991B1B" }}>
+                      Error: {error}
+                    </p>
+                    <button
+                      onClick={fetchTransactions}
+                      className="px-4 py-2 rounded text-sm transition-all hover:opacity-80"
+                      style={{ backgroundColor: "#DC2626", color: "#FFFFFF" }}
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
 
                 {/* Filter Panel */}
                 {showFilters && (
@@ -1230,127 +1217,135 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody style={{ borderTop: "1px solid #D0D5DD" }}>
-                        {filteredPaginatedTransactions.map((transaction) => (
-                          <tr
-                            key={transaction.transaction_id}
-                            className="transition-colors hover:opacity-80"
-                            style={getRowColor()}
-                          >
-                            <td
-                              className="px-6 py-4 whitespace-nowrap text-sm font-medium"
-                              style={{ color: "#000000" }}
-                            >
-                              {transaction.transaction_id}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span
-                                className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusBadgeColor(
-                                  transaction.approval_status
-                                )}`}
-                              >
-                                {transaction.approval_status}
-                              </span>
-                            </td>
-                            <td
-                              className="px-6 py-4 whitespace-nowrap text-sm"
-                              style={{ color: "#3B4953" }}
-                            >
-                              {transaction.payment_amount
-                                ? `${
-                                    transaction.currency || ""
-                                  } ${transaction.payment_amount.toLocaleString()}`
-                                : "N/A"}
-                            </td>
-                            <td
-                              className="px-6 py-4 whitespace-nowrap text-sm"
-                              style={{ color: "#3B4953" }}
-                            >
-                              {transaction.payment_method || "N/A"}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm"
-                              style={{ color: "#3B4953" }}
-                            >
-                              <div className="flex flex-col">
-                                <span>
-                                  From: {transaction.payee_country || "N/A"}
-                                </span>
-                                <span>
-                                  To: {transaction.vendor_country || "N/A"}
-                                </span>
-                              </div>
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm"
-                              style={{ color: "#3B4953" }}
-                            >
-                              {transaction.payment_purpose || "N/A"}
-                            </td>
-                            <td
-                              className="px-6 py-4 whitespace-nowrap text-sm"
-                              style={{ color: "#3B4953" }}
-                            >
-                              {transaction.payment_time || "N/A"}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => {
-                                    setSelectedTransaction(transaction)
-                                    setActiveTab("conclusion")
-                                  }}
-                                  className="p-2 rounded transition-all hover:opacity-80"
-                                  style={{
-                                    backgroundColor: "#E9EEF6",
-                                    color: "#3B4953"
-                                  }}
-                                  title="Analyze Transaction"
+                        {isLoading ? (
+                          <tr>
+                            <td colSpan={8} className="px-6 py-12">
+                              <div className="flex flex-col items-center justify-center space-y-4">
+                                <div className="w-12 h-12 border-4 border-neutral-300 border-t-blue-500 rounded-full animate-spin"></div>
+                                <p
+                                  className="text-sm"
+                                  style={{ color: "#3B4953" }}
                                 >
-                                  <BarChart3 className="w-4 h-4" />
-                                </button>
-                                {(transaction.approval_status?.toLowerCase() ===
-                                  "approved" ||
-                                  transaction.approval_status?.toLowerCase() ===
-                                    "rejected") && (
-                                  <button
-                                    onClick={() => handleDispute(transaction)}
-                                    className="px-3 py-1 rounded text-xs font-medium transition-all hover:opacity-80"
-                                    style={{
-                                      backgroundColor: "#3B82F6",
-                                      color: "#FFFFFF"
-                                    }}
-                                    title="Dispute Transaction"
-                                  >
-                                    Dispute
-                                  </button>
-                                )}
+                                  Loading transactions...
+                                </p>
                               </div>
                             </td>
                           </tr>
-                        ))}
+                        ) : filteredPaginatedTransactions.length === 0 ? (
+                          <tr>
+                            <td colSpan={8} className="px-6 py-12 text-center">
+                              <p
+                                className="text-sm"
+                                style={{ color: "#3B4953" }}
+                              >
+                                No transactions found
+                              </p>
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredPaginatedTransactions.map((transaction) => (
+                            <tr
+                              key={transaction.transaction_id}
+                              className="transition-colors hover:opacity-80"
+                              style={getRowColor()}
+                            >
+                              <td
+                                className="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                                style={{ color: "#000000" }}
+                              >
+                                {transaction.transaction_id}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span
+                                  className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusBadgeColor(
+                                    transaction.approval_status
+                                  )}`}
+                                >
+                                  {transaction.approval_status}
+                                </span>
+                              </td>
+                              <td
+                                className="px-6 py-4 whitespace-nowrap text-sm"
+                                style={{ color: "#3B4953" }}
+                              >
+                                {transaction.payment_amount
+                                  ? `${
+                                      transaction.currency || ""
+                                    } ${transaction.payment_amount.toLocaleString()}`
+                                  : "N/A"}
+                              </td>
+                              <td
+                                className="px-6 py-4 whitespace-nowrap text-sm"
+                                style={{ color: "#3B4953" }}
+                              >
+                                {transaction.payment_method || "N/A"}
+                              </td>
+                              <td
+                                className="px-6 py-4 text-sm"
+                                style={{ color: "#3B4953" }}
+                              >
+                                <div className="flex flex-col">
+                                  <span>
+                                    From: {transaction.payee_country || "N/A"}
+                                  </span>
+                                  <span>
+                                    To: {transaction.vendor_country || "N/A"}
+                                  </span>
+                                </div>
+                              </td>
+                              <td
+                                className="px-6 py-4 text-sm"
+                                style={{ color: "#3B4953" }}
+                              >
+                                {transaction.payment_purpose || "N/A"}
+                              </td>
+                              <td
+                                className="px-6 py-4 whitespace-nowrap text-sm"
+                                style={{ color: "#3B4953" }}
+                              >
+                                {transaction.payment_time || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedTransaction(transaction)
+                                      setActiveTab("conclusion")
+                                    }}
+                                    className="p-2 rounded transition-all hover:opacity-80"
+                                    style={{
+                                      backgroundColor: "#E9EEF6",
+                                      color: "#3B4953"
+                                    }}
+                                    title="Analyze Transaction"
+                                  >
+                                    <BarChart3 className="w-4 h-4" />
+                                  </button>
+                                  {(transaction.approval_status?.toLowerCase() ===
+                                    "approved" ||
+                                    transaction.approval_status?.toLowerCase() ===
+                                      "rejected") && (
+                                    <button
+                                      onClick={() => handleDispute(transaction)}
+                                      className="px-3 py-1 rounded text-xs font-medium transition-all hover:opacity-80"
+                                      style={{
+                                        backgroundColor: "#3B82F6",
+                                        color: "#FFFFFF"
+                                      }}
+                                      title="Dispute Transaction"
+                                    >
+                                      Dispute
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
                 </div>
-
-                {filteredPaginatedTransactions.length === 0 && !isLoading && (
-                  <div className="text-center mt-8">
-                    <p style={{ color: "#3B4953" }}>
-                      {activeFilterCount > 0
-                        ? "No transactions match the current filters"
-                        : "No transactions found"}
-                    </p>
-                    {activeFilterCount > 0 && (
-                      <button
-                        onClick={resetFilters}
-                        className="mt-4 px-4 py-2 rounded transition-all hover:opacity-80"
-                        style={{ backgroundColor: "#E9EEF6", color: "#3B4953" }}
-                      >
-                        Clear Filters
-                      </button>
-                    )}
-                  </div>
-                )}
 
                 {/* Bottom Pagination */}
                 {filteredTotalCount > 0 && (

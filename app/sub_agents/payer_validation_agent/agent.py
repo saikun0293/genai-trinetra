@@ -9,6 +9,7 @@ from .tools import (
     analyze_rejection_patterns,
 )
 from app.sub_agents.utils import create_analysis_callback
+from app.sub_agents.thinking_callbacks import create_thinking_callback
 from .prompt import PAYER_VALIDATION_PROMPT
 
 # Configure logging
@@ -33,6 +34,7 @@ payer_validation_agent = LlmAgent(
         identify_anomalies,
         analyze_rejection_patterns,   
     ],
+    before_agent_callback=create_thinking_callback("Payer Agent", "Analyzing payer behavior patterns and transaction anomalies..."),
     after_agent_callback=create_analysis_callback("payer_analysis", "payer_validation_agent")  # Store in BigQuery
 )
 

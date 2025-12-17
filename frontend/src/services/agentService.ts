@@ -13,6 +13,18 @@ interface AgentResponse {
   type?: string
 }
 
+interface ThinkingMessage {
+  agent: string
+  message: string
+  timestamp: number
+}
+
+interface AnalysisMessage {
+  agent: string
+  analysis: string
+  timestamp: number
+}
+
 interface AnalysisData {
   transaction_id: string
   payee_analysis: string | null
@@ -57,7 +69,9 @@ class AgentService {
   async sendMessage(
     message: string,
     appName: string = "app",
-    onChunk?: (text: string) => void
+    onChunk?: (text: string) => void,
+    onThinking?: (thinking: ThinkingMessage) => void,
+    onAnalysis?: (analysis: AnalysisMessage) => void
   ): Promise<string> {
     // Create session if not exists
     if (!this.currentSessionId) {
@@ -110,6 +124,35 @@ class AgentService {
                 if (data.content?.parts) {
                   for (const part of data.content.parts) {
                     if (part.text) {
+                      // Check if this is a thinking message
+                      const thinkingMatch = part.text.match(
+                        /^\[THINKING:(.*?)\]\s*(.*)$/
+                      )
+                      if (thinkingMatch && onThinking) {
+                        const [, agent, message] = thinkingMatch
+                        onThinking({
+                          agent: agent.trim(),
+                          message: message.trim(),
+                          timestamp: Date.now()
+                        })
+                        continue
+                      }
+
+                      // Check if this is an analysis message
+                      const analysisMatch = part.text.match(
+                        /^\[ANALYSIS:(.*?)\]\n(.*)$/s
+                      )
+                      if (analysisMatch && onAnalysis) {
+                        const [, agent, analysis] = analysisMatch
+                        onAnalysis({
+                          agent: agent.trim(),
+                          analysis: analysis.trim(),
+                          timestamp: Date.now()
+                        })
+                        continue
+                      }
+
+                      // Regular message
                       fullText += part.text
                       if (onChunk) {
                         onChunk(part.text)
@@ -167,3 +210,4 @@ class AgentService {
 }
 
 export const agentService = new AgentService()
+export type { ThinkingMessage, AnalysisMessage }

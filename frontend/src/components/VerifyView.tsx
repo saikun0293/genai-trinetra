@@ -1,13 +1,19 @@
 import { useState, useRef, useEffect } from "react"
 import { Send, Loader2, Trash2, User, Bot } from "lucide-react"
-import { agentService } from "@/services/agentService"
+import {
+  agentService,
+  ThinkingMessage,
+  AnalysisMessage
+} from "@/services/agentService"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import { ThinkingMessages, ThinkingItem } from "@/components/ThinkingMessages"
 
 export interface ChatMessage {
   role: "user" | "assistant"
   content: string
   timestamp: Date
+  thinkingItems?: ThinkingItem[]
 }
 
 interface VerifyViewProps {
@@ -20,6 +26,9 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [streamingText, setStreamingText] = useState("")
   const [statusMessageIndex, setStatusMessageIndex] = useState(0)
+  const [currentThinkingItems, setCurrentThinkingItems] = useState<
+    ThinkingItem[]
+  >([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -75,6 +84,10 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
     setInput("")
     setIsLoading(true)
     setStreamingText("")
+    setCurrentThinkingItems([])
+
+    // Track thinking items during the request
+    const thinkingItems: ThinkingItem[] = []
 
     try {
       const response = await agentService.sendMessage(
@@ -82,17 +95,51 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
         "app",
         (chunk) => {
           setStreamingText((prev) => prev + chunk)
+        },
+        (thinking: ThinkingMessage) => {
+          const newItem: ThinkingItem = {
+            agent: thinking.agent,
+            message: thinking.message,
+            timestamp: thinking.timestamp
+          }
+          thinkingItems.push(newItem)
+          setCurrentThinkingItems((prev) => [...prev, newItem])
+        },
+        (analysis: AnalysisMessage) => {
+          // Find the last item for this agent and add analysis to it
+          const lastIndex = thinkingItems.findIndex(
+            (item) => item.agent === analysis.agent
+          )
+          if (lastIndex !== -1) {
+            thinkingItems[lastIndex] = {
+              ...thinkingItems[lastIndex],
+              analysis: analysis.analysis
+            }
+          } else {
+            // If no thinking message exists, create a new item with analysis only
+            const newItem: ThinkingItem = {
+              agent: analysis.agent,
+              message: "",
+              analysis: analysis.analysis,
+              timestamp: analysis.timestamp
+            }
+            thinkingItems.push(newItem)
+          }
+
+          setCurrentThinkingItems([...thinkingItems])
         }
       )
 
       const assistantMessage: ChatMessage = {
         role: "assistant",
         content: response,
-        timestamp: new Date()
+        timestamp: new Date(),
+        thinkingItems: thinkingItems.length > 0 ? [...thinkingItems] : undefined
       }
 
       setMessages((prev) => [...prev, assistantMessage])
       setStreamingText("")
+      setCurrentThinkingItems([])
     } catch (error) {
       console.error("Error sending message:", error)
       const errorMessage: ChatMessage = {
@@ -101,6 +148,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
         timestamp: new Date()
       }
       setMessages((prev) => [...prev, errorMessage])
+      setCurrentThinkingItems([])
     } finally {
       setIsLoading(false)
     }
@@ -110,6 +158,7 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
     setMessages([])
     agentService.resetSession()
     setStreamingText("")
+    setCurrentThinkingItems([])
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -227,11 +276,17 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                 }}
               >
                 {message.role === "assistant" ? (
-                  <div className="markdown-analysis max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {message.content}
-                    </ReactMarkdown>
-                  </div>
+                  <>
+                    {message.thinkingItems &&
+                      message.thinkingItems.length > 0 && (
+                        <ThinkingMessages items={message.thinkingItems} />
+                      )}
+                    <div className="markdown-analysis max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  </>
                 ) : (
                   <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
                     {message.content}
@@ -276,6 +331,9 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                   border: "1px solid #D0D5DD"
                 }}
               >
+                {currentThinkingItems.length > 0 && (
+                  <ThinkingMessages items={currentThinkingItems} />
+                )}
                 <div className="markdown-analysis max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {streamingText}
@@ -311,6 +369,9 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
                   border: "1px solid #D0D5DD"
                 }}
               >
+                {currentThinkingItems.length > 0 && (
+                  <ThinkingMessages items={currentThinkingItems} />
+                )}
                 <div className="flex items-center gap-2">
                   <Loader2
                     className="w-4 h-4 animate-spin"

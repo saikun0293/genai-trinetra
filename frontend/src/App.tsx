@@ -201,6 +201,37 @@ export default function App() {
     setSnackbar((prev) => ({ ...prev, open: false }))
   }
 
+  const handleDispute = (transaction: Transaction) => {
+    // Create dispute message
+    const disputeMessage = `I would like to dispute transaction ${
+      transaction.transaction_id
+    }. This transaction was ${
+      transaction.approval_status
+    } but I believe this decision should be reconsidered.\n\nTransaction Details:\n- Amount: ${
+      transaction.currency || ""
+    } ${
+      transaction.payment_amount?.toLocaleString() || "N/A"
+    }\n- Payment Method: ${transaction.payment_method || "N/A"}\n- From: ${
+      transaction.payee_country || "N/A"
+    }\n- To: ${transaction.vendor_country || "N/A"}\n- Purpose: ${
+      transaction.payment_purpose || "N/A"
+    }\n- Payment Time: ${
+      transaction.payment_time || "N/A"
+    }\n\nPlease review this transaction again.`
+
+    // Add the dispute message to chat
+    setChatMessages([
+      {
+        role: "user",
+        content: disputeMessage,
+        timestamp: new Date()
+      }
+    ])
+
+    // Switch to verify view
+    setActiveView("verify")
+  }
+
   // Frontend pagination
   const totalCount = allTransactions.length
 
@@ -1262,20 +1293,38 @@ export default function App() {
                               {transaction.payment_time || "N/A"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <button
-                                onClick={() => {
-                                  setSelectedTransaction(transaction)
-                                  setActiveTab("conclusion")
-                                }}
-                                className="p-2 rounded transition-all hover:opacity-80"
-                                style={{
-                                  backgroundColor: "#E9EEF6",
-                                  color: "#3B4953"
-                                }}
-                                title="Analyze Transaction"
-                              >
-                                <BarChart3 className="w-4 h-4" />
-                              </button>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setSelectedTransaction(transaction)
+                                    setActiveTab("conclusion")
+                                  }}
+                                  className="p-2 rounded transition-all hover:opacity-80"
+                                  style={{
+                                    backgroundColor: "#E9EEF6",
+                                    color: "#3B4953"
+                                  }}
+                                  title="Analyze Transaction"
+                                >
+                                  <BarChart3 className="w-4 h-4" />
+                                </button>
+                                {(transaction.approval_status?.toLowerCase() ===
+                                  "approved" ||
+                                  transaction.approval_status?.toLowerCase() ===
+                                    "rejected") && (
+                                  <button
+                                    onClick={() => handleDispute(transaction)}
+                                    className="px-3 py-1 rounded text-xs font-medium transition-all hover:opacity-80"
+                                    style={{
+                                      backgroundColor: "#3B82F6",
+                                      color: "#FFFFFF"
+                                    }}
+                                    title="Dispute Transaction"
+                                  >
+                                    Dispute
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}

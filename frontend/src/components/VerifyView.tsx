@@ -92,11 +92,7 @@ export function VerifyView({
       const response = await agentService.sendMessage(
         userMessage.content,
         "app",
-        (chunk) => {
-          // Only update streaming text if it's actual content
-          console.log("Received chunk:", chunk.substring(0, 100))
-          setStreamingText((prev) => prev + chunk)
-        },
+        undefined, // Don't stream chunks to chat - only show final report
         undefined, // Don't track thinking messages
         (analysisMessage) => {
           // Track analysis messages in the accordion
@@ -354,55 +350,27 @@ export function VerifyView({
                   border: "1px solid #D0D5DD"
                 }}
               >
-                {streamingText ? (
-                  <>
-                    {currentAnalysisItems.length > 0 && (
-                      <div className="mb-3">
-                        <ThinkingMessages items={currentAnalysisItems} />
-                      </div>
-                    )}
-                    <div className="markdown-analysis max-w-none mb-3">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {streamingText}
-                      </ReactMarkdown>
-                    </div>
-                    <div
-                      className="flex items-center gap-2 pt-2 border-t"
-                      style={{ borderColor: "#E9EEF6" }}
-                    >
-                      <Loader2
-                        className="w-3 h-3 animate-spin"
-                        style={{ color: "#3b82f6" }}
-                      />
-                      <p className="text-xs" style={{ color: "#3B4953" }}>
-                        Processing...
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {currentAnalysisItems.length > 0 && (
-                      <div className="mb-3">
-                        <ThinkingMessages items={currentAnalysisItems} />
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 mb-2">
-                      <Loader2
-                        className="w-4 h-4 animate-spin"
-                        style={{ color: "#3b82f6" }}
-                      />
-                      <p
-                        className="text-sm font-medium"
-                        style={{ color: "#3B4953" }}
-                      >
-                        {statusMessages[statusMessageIndex]}
-                      </p>
-                    </div>
-                    <p className="text-xs" style={{ color: "#6B7280" }}>
-                      Running compliance analysis agents...
-                    </p>
-                  </>
+                {currentAnalysisItems.length > 0 && (
+                  <div className="mb-3">
+                    <ThinkingMessages items={currentAnalysisItems} />
+                  </div>
                 )}
+                <div className="flex items-center gap-2 mb-2">
+                  <Loader2
+                    className="w-4 h-4 animate-spin"
+                    style={{ color: "#3b82f6" }}
+                  />
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "#3B4953" }}
+                  >
+                    {statusMessages[statusMessageIndex]}
+                  </p>
+                </div>
+                <p className="text-xs" style={{ color: "#6B7280" }}>
+                  Running compliance analysis agents...
+                </p>
+              </div>
               </div>
             </div>
           )}

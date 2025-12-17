@@ -6,7 +6,6 @@ from google.adk.agents import LlmAgent
 from google.cloud import bigquery
 from google.adk.tools import FunctionTool
 from app.sub_agents.utils import create_analysis_callback
-from app.sub_agents.thinking_callbacks import create_thinking_callback
 from .prompt import TRANSACTION_AGENT_PROMPT
 
 # Configure logging
@@ -101,7 +100,6 @@ transaction_agent = LlmAgent(
     instruction=TRANSACTION_AGENT_PROMPT,
     tools=[FunctionTool(analyze_transaction_frequency)],
     output_key="transaction_agent",
-    before_agent_callback=create_thinking_callback("Transaction Agent", "Analyzing historical transaction patterns and approval rates..."),
     after_agent_callback=create_analysis_callback("transaction_analysis", "transaction_agent")  # Store in BigQuery
 )
 

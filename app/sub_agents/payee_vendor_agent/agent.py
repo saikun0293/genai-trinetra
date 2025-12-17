@@ -11,7 +11,6 @@ from app.sub_agents.payee_vendor_agent.tools import (
     analyze_temporal_patterns,
 )
 from app.sub_agents.utils import create_analysis_callback
-from app.sub_agents.thinking_callbacks import create_thinking_callback
 from .prompt import PAYEE_VENDOR_PROMPT
 
 # Configure logging
@@ -37,7 +36,6 @@ payee_agent = LlmAgent(
         identify_suspicious_payers,
         analyze_temporal_patterns,
     ],
-    before_agent_callback=create_thinking_callback("Payee Agent", "Analyzing payee-vendor relationships and transaction patterns..."),
     after_agent_callback=create_analysis_callback("payee_analysis", "payee_agent")
 )
 

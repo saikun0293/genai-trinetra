@@ -13,18 +13,6 @@ interface AgentResponse {
   type?: string
 }
 
-interface ThinkingMessage {
-  agent: string
-  message: string
-  timestamp: number
-}
-
-interface AnalysisMessage {
-  agent: string
-  analysis: string
-  timestamp: number
-}
-
 interface AnalysisData {
   transaction_id: string
   payee_analysis: string | null
@@ -69,9 +57,7 @@ class AgentService {
   async sendMessage(
     message: string,
     appName: string = "app",
-    onChunk?: (text: string) => void,
-    onThinking?: (thinking: ThinkingMessage) => void,
-    onAnalysis?: (analysis: AnalysisMessage) => void
+    onChunk?: (text: string) => void
   ): Promise<string> {
     // Create session if not exists
     if (!this.currentSessionId) {
@@ -102,22 +88,12 @@ class AgentService {
     const reader = response.body?.getReader()
     const decoder = new TextDecoder()
     let fullText = ""
-    let hasError = false
-    let errorDetails = ""
-    let messageCount = 0
-
-    console.log("Starting SSE stream...")
 
     if (reader) {
       try {
         while (true) {
           const { done, value } = await reader.read()
-          if (done) {
-            console.log(
-              `SSE stream completed. Processed ${messageCount} messages. Final text length: ${fullText.length}`
-            )
-            break
-          }
+          if (done) break
 
           const chunk = decoder.decode(value, { stream: true })
           const lines = chunk.split("\n")
@@ -126,66 +102,14 @@ class AgentService {
             if (line.startsWith("data: ")) {
               try {
                 const jsonStr = line.slice(6)
-                if (jsonStr.trim() === "[DONE]") {
-                  console.log("Received [DONE] signal")
-                  continue
-                }
+                if (jsonStr.trim() === "[DONE]") continue
 
                 const data: AgentResponse = JSON.parse(jsonStr)
-                messageCount++
-
-                // Check if this is an error response
-                if (data.type === "error" || (data as any).error) {
-                  hasError = true
-                  errorDetails = (data as any).error || JSON.stringify(data)
-                  throw new Error(errorDetails)
-                }
 
                 // Extract text from the response
                 if (data.content?.parts) {
                   for (const part of data.content.parts) {
                     if (part.text) {
-                      // Check if this is a thinking message
-                      const thinkingMatch = part.text.match(
-                        /^\[THINKING:(.*?)\]\s*(.*)$/
-                      )
-                      if (thinkingMatch && onThinking) {
-                        const [, agent, message] = thinkingMatch
-                        console.log(
-                          `[THINKING] ${agent}: ${message.substring(0, 50)}...`
-                        )
-                        onThinking({
-                          agent: agent.trim(),
-                          message: message.trim(),
-                          timestamp: Date.now()
-                        })
-                        continue
-                      }
-
-                      // Check if this is an analysis message
-                      const analysisMatch = part.text.match(
-                        /^\[ANALYSIS:(.*?)\]\n([\s\S]*)$/
-                      )
-                      if (analysisMatch) {
-                        const [, agent, analysis] = analysisMatch
-                        console.log(
-                          `[ANALYSIS] ${agent}: ${analysis.length} chars (filtered out from chat)`
-                        )
-                        if (onAnalysis) {
-                          onAnalysis({
-                            agent: agent.trim(),
-                            analysis: analysis.trim(),
-                            timestamp: Date.now()
-                          })
-                        }
-                        // Don't add to main text - analyses only show in their tabs
-                        continue
-                      }
-
-                      // Regular message
-                      console.log(
-                        `[CONTENT] Adding ${part.text.length} chars to response`
-                      )
                       fullText += part.text
                       if (onChunk) {
                         onChunk(part.text)
@@ -194,10 +118,6 @@ class AgentService {
                   }
                 }
               } catch (e) {
-                // If it's our thrown error, re-throw it
-                if (hasError) {
-                  throw e
-                }
                 // Skip invalid JSON
                 console.debug("Skipping invalid JSON chunk:", e)
               }
@@ -207,11 +127,6 @@ class AgentService {
       } finally {
         reader.releaseLock()
       }
-    }
-
-    // Check if we got an error in the response
-    if (hasError) {
-      throw new Error(errorDetails)
     }
 
     return fullText
@@ -252,4 +167,3 @@ class AgentService {
 }
 
 export const agentService = new AgentService()
-export type { ThinkingMessage, AnalysisMessage }

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import { Send, Loader2, Trash2, User, Bot } from "lucide-react"
-import { agentService, ThinkingMessage } from "@/services/agentService"
+import { agentService } from "@/services/agentService"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
@@ -13,19 +13,13 @@ export interface ChatMessage {
 interface VerifyViewProps {
   messages: ChatMessage[]
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
-  onAnalysisComplete?: () => void
 }
 
-export function VerifyView({
-  messages,
-  setMessages,
-  onAnalysisComplete
-}: VerifyViewProps) {
+export function VerifyView({ messages, setMessages }: VerifyViewProps) {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [streamingText, setStreamingText] = useState("")
   const [statusMessageIndex, setStatusMessageIndex] = useState(0)
-  const [agentProgress, setAgentProgress] = useState<string[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -81,58 +75,29 @@ export function VerifyView({
     setInput("")
     setIsLoading(true)
     setStreamingText("")
-    setAgentProgress([])
 
     try {
       const response = await agentService.sendMessage(
         userMessage.content,
         "app",
         (chunk) => {
-          // Only update streaming text if it's actual content
-          console.log("Received chunk:", chunk.substring(0, 100))
           setStreamingText((prev) => prev + chunk)
-        },
-        undefined, // Don't track thinking messages
-        undefined // Don't handle analysis messages in chat - they're stored in BigQuery and accessed via detail view
+        }
       )
 
-      console.log("Analysis complete, response length:", response?.length || 0)
-
-      // Only include meaningful response
       const assistantMessage: ChatMessage = {
         role: "assistant",
-        content:
-          response ||
-          "Analysis complete. View the transaction details to see the full analysis.",
+        content: response,
         timestamp: new Date()
       }
 
       setMessages((prev) => [...prev, assistantMessage])
       setStreamingText("")
-      setAgentProgress([])
-
-      // Refresh transactions if analysis was completed successfully
-      if (onAnalysisComplete && response && !response.includes("error")) {
-        setTimeout(() => {
-          onAnalysisComplete()
-        }, 1000) // Small delay to ensure backend has updated
-      }
     } catch (error) {
       console.error("Error sending message:", error)
-
-      // Check if it's a context variable error
-      let errorContent = "Sorry, I encountered an error. Please try again."
-      if (error instanceof Error) {
-        if (error.message.includes("Context variable not found")) {
-          errorContent = `⚠️ **Analysis Error**: One or more agents failed to complete their analysis.\n\nThis usually means the agents couldn't access required data. Please try again or contact support if the issue persists.\n\nError details: ${error.message}`
-        } else {
-          errorContent = `⚠️ **Error**: ${error.message}\n\nPlease try again.`
-        }
-      }
-
       const errorMessage: ChatMessage = {
         role: "assistant",
-        content: errorContent,
+        content: "Sorry, I encountered an error. Please try again.",
         timestamp: new Date()
       }
       setMessages((prev) => [...prev, errorMessage])
@@ -262,13 +227,11 @@ export function VerifyView({
                 }}
               >
                 {message.role === "assistant" ? (
-                  <>
-                    <div className="markdown-analysis max-w-none">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {message.content}
-                      </ReactMarkdown>
-                    </div>
-                  </>
+                  <div className="markdown-analysis max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
                 ) : (
                   <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
                     {message.content}
@@ -294,8 +257,45 @@ export function VerifyView({
             </div>
           ))}
 
-          {/* Streaming/Loading message - show only one state */}
-          {isLoading && (
+          {/* Streaming message */}
+          {streamingText && (
+            <div className="flex gap-3 justify-start">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: "#E9EEF6" }}
+              >
+                <Bot className="w-5 h-5" style={{ color: "#3b82f6" }} />
+              </div>
+              <div
+                className="max-w-[80%] rounded-lg px-4 py-3"
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  color: "#000000",
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
+                  border: "1px solid #D0D5DD"
+                }}
+              >
+                <div className="markdown-analysis max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {streamingText}
+                  </ReactMarkdown>
+                </div>
+                <div className="flex items-center gap-1 mt-2">
+                  <Loader2
+                    className="w-3 h-3 animate-spin"
+                    style={{ color: "#3b82f6" }}
+                  />
+                  <p className="text-xs" style={{ color: "#3B4953" }}>
+                    Thinking...
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Loading status message */}
+          {isLoading && !streamingText && (
             <div className="flex gap-3 justify-start">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
@@ -311,45 +311,18 @@ export function VerifyView({
                   border: "1px solid #D0D5DD"
                 }}
               >
-                {streamingText ? (
-                  <>
-                    <div className="markdown-analysis max-w-none mb-3">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {streamingText}
-                      </ReactMarkdown>
-                    </div>
-                    <div
-                      className="flex items-center gap-2 pt-2 border-t"
-                      style={{ borderColor: "#E9EEF6" }}
-                    >
-                      <Loader2
-                        className="w-3 h-3 animate-spin"
-                        style={{ color: "#3b82f6" }}
-                      />
-                      <p className="text-xs" style={{ color: "#3B4953" }}>
-                        Processing...
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Loader2
-                        className="w-4 h-4 animate-spin"
-                        style={{ color: "#3b82f6" }}
-                      />
-                      <p
-                        className="text-sm font-medium"
-                        style={{ color: "#3B4953" }}
-                      >
-                        {statusMessages[statusMessageIndex]}
-                      </p>
-                    </div>
-                    <p className="text-xs" style={{ color: "#6B7280" }}>
-                      Running compliance analysis agents...
-                    </p>
-                  </>
-                )}
+                <div className="flex items-center gap-2">
+                  <Loader2
+                    className="w-4 h-4 animate-spin"
+                    style={{ color: "#3b82f6" }}
+                  />
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "#3B4953" }}
+                  >
+                    {statusMessages[statusMessageIndex]}
+                  </p>
+                </div>
               </div>
             </div>
           )}

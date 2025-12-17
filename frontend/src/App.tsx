@@ -61,7 +61,7 @@ interface AnalysisData {
   critic_analysis: string | null
 }
 
-type TabType = "conclusion" | "payee" | "payer" | "geopolitics" | "transaction"
+type TabType = "conclusion" | "payee" | "payer" | "geopolitics" | "transactions"
 
 export default function App() {
   const [activeView, setActiveView] = useState<"dashboard" | "verify">(
@@ -755,7 +755,7 @@ export default function App() {
             </div>
           </div>
         )
-      case "transaction":
+      case "transactions":
         return (
           <div className="space-y-4">
             {analysisData?.transaction_analysis ? (
@@ -809,11 +809,7 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex-1 ml-20">
         {activeView === "verify" ? (
-          <VerifyView
-            messages={chatMessages}
-            setMessages={setChatMessages}
-            onAnalysisComplete={fetchTransactions}
-          />
+          <VerifyView messages={chatMessages} setMessages={setChatMessages} />
         ) : (
           <div className="p-8 flex">
             <div
@@ -1436,7 +1432,7 @@ export default function App() {
                       { id: "payee", label: "Payee" },
                       { id: "payer", label: "Payer" },
                       { id: "geopolitics", label: "Geopolitics" },
-                      { id: "transaction", label: "Transaction" }
+                      { id: "transactions", label: "History" }
                     ].map((tab) => (
                       <button
                         key={tab.id}

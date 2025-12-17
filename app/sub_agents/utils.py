@@ -139,8 +139,7 @@ def update_approval_status(transaction_id: str, approval_status: str) -> bool:
 
 def create_analysis_callback(column_name: str, output_key: str):
     """
-    Factory function to create agent callbacks that store analysis in BigQuery
-    and emit the analysis to the UI.
+    Factory function to create agent callbacks that store analysis in BigQuery.
     
     Args:
         column_name: The BigQuery column to store the analysis in
@@ -150,7 +149,7 @@ def create_analysis_callback(column_name: str, output_key: str):
         A callback function for the agent
     """
     def callback(callback_context: CallbackContext) -> Optional[genai_types.Content]:
-        """Store analysis from session state to BigQuery and emit to UI."""
+        """Store analysis from session state to BigQuery."""
         try:
             # Get transaction_id from session state
             transaction_id = callback_context.session.state.get("transaction_id")
@@ -170,33 +169,13 @@ def create_analysis_callback(column_name: str, output_key: str):
                 # Store in BigQuery
                 store_analysis_in_bigquery(transaction_id, column_name, analysis_text)
                 logger.info(f"✓ Stored {column_name} for transaction {transaction_id}")
-                
-                # Get agent name from thinking key or derive it from output_key
-                agent_name_map = {
-                    "payee_agent": "Payee Agent",
-                    "payer_validation_agent": "Payer Agent",
-                    "geopolitics_agent": "Geopolitics Agent",
-                    "transaction_agent": "Transaction Agent"
-                }
-                agent_name = agent_name_map.get(output_key, output_key)
-                
-                # Emit analysis to UI
-                logger.info(f"📊 {agent_name} completed analysis")
-                return genai_types.Content(
-                    role="model",
-                    parts=[
-                        genai_types.Part(
-                            text=f"[ANALYSIS:{agent_name}]\n{analysis_text}"
-                        )
-                    ]
-                )
             else:
                 logger.warning(f"⚠ No analysis text found in session state key '{output_key}' for {column_name}")
             
         except Exception as e:
             logger.error(f"✗ Error in {column_name} callback: {e}", exc_info=True)
         
-        # Return None if no analysis to emit
+        # Return None to suppress UI response
         return None
     
     return callback

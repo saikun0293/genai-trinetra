@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { RefreshCw, BarChart3, X, Filter, FilterX } from "lucide-react"
+import Snackbar from "@mui/material/Snackbar"
+import Alert from "@mui/material/Alert"
 import { SideNav } from "@/components/SideNav"
 import { VerifyView, ChatMessage } from "@/components/VerifyView"
 import { agentService } from "@/services/agentService"
@@ -87,6 +89,11 @@ export default function App() {
     minAmount: "",
     maxAmount: ""
   })
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean
+    message: string
+    severity: "success" | "error" | "info" | "warning"
+  }>({ open: false, message: "", severity: "success" })
 
   useEffect(() => {
     fetchTransactions()
@@ -175,11 +182,23 @@ export default function App() {
         )
       }
 
-      alert(`Transaction ${newStatus} successfully!`)
+      setSnackbar({
+        open: true,
+        message: `Transaction ${newStatus} successfully!`,
+        severity: "success"
+      })
     } catch (err) {
       console.error("Error updating transaction:", err)
-      alert("Failed to update transaction status")
+      setSnackbar({
+        open: true,
+        message: "Failed to update transaction status",
+        severity: "error"
+      })
     }
+  }
+
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }))
   }
 
   // Frontend pagination
@@ -1402,6 +1421,23 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   )
 }

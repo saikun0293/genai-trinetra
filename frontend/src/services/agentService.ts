@@ -158,6 +158,7 @@ class AgentService {
                           analysis: analysis.trim(),
                           timestamp: Date.now()
                         })
+                        // Don't add to main text - analyses only show in accordion
                         continue
                       }
 

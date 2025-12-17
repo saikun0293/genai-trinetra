@@ -149,7 +149,7 @@ class AgentService {
 
                       // Check if this is an analysis message
                       const analysisMatch = part.text.match(
-                        /^\[ANALYSIS:(.*?)\]\n(.*)$/s
+                        /^\[ANALYSIS:(.*?)\]\n([\s\S]*)$/
                       )
                       if (analysisMatch && onAnalysis) {
                         const [, agent, analysis] = analysisMatch
@@ -158,7 +158,7 @@ class AgentService {
                           analysis: analysis.trim(),
                           timestamp: Date.now()
                         })
-                        // Don't add to main text - analyses only show in accordion
+                        // Don't add to main text - analyses only show in their tabs
                         continue
                       }
 

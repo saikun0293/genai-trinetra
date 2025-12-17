@@ -61,7 +61,7 @@ interface AnalysisData {
   critic_analysis: string | null
 }
 
-type TabType = "conclusion" | "payee" | "payer" | "geopolitics" | "transactions"
+type TabType = "conclusion" | "payee" | "payer" | "geopolitics" | "transaction"
 
 export default function App() {
   const [activeView, setActiveView] = useState<"dashboard" | "verify">(
@@ -755,7 +755,7 @@ export default function App() {
             </div>
           </div>
         )
-      case "transactions":
+      case "transaction":
         return (
           <div className="space-y-4">
             {analysisData?.transaction_analysis ? (
@@ -1441,7 +1441,7 @@ export default function App() {
                       { id: "payee", label: "Payee" },
                       { id: "payer", label: "Payer" },
                       { id: "geopolitics", label: "Geopolitics" },
-                      { id: "transactions", label: "History" }
+                      { id: "transaction", label: "Transaction" }
                     ].map((tab) => (
                       <button
                         key={tab.id}

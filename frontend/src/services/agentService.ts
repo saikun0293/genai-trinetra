@@ -104,12 +104,20 @@ class AgentService {
     let fullText = ""
     let hasError = false
     let errorDetails = ""
+    let messageCount = 0
+
+    console.log("Starting SSE stream...")
 
     if (reader) {
       try {
         while (true) {
           const { done, value } = await reader.read()
-          if (done) break
+          if (done) {
+            console.log(
+              `SSE stream completed. Processed ${messageCount} messages. Final text length: ${fullText.length}`
+            )
+            break
+          }
 
           const chunk = decoder.decode(value, { stream: true })
           const lines = chunk.split("\n")
@@ -118,9 +126,13 @@ class AgentService {
             if (line.startsWith("data: ")) {
               try {
                 const jsonStr = line.slice(6)
-                if (jsonStr.trim() === "[DONE]") continue
+                if (jsonStr.trim() === "[DONE]") {
+                  console.log("Received [DONE] signal")
+                  continue
+                }
 
                 const data: AgentResponse = JSON.parse(jsonStr)
+                messageCount++
 
                 // Check if this is an error response
                 if (data.type === "error" || (data as any).error) {
@@ -139,6 +151,9 @@ class AgentService {
                       )
                       if (thinkingMatch && onThinking) {
                         const [, agent, message] = thinkingMatch
+                        console.log(
+                          `[THINKING] ${agent}: ${message.substring(0, 50)}...`
+                        )
                         onThinking({
                           agent: agent.trim(),
                           message: message.trim(),
@@ -151,18 +166,26 @@ class AgentService {
                       const analysisMatch = part.text.match(
                         /^\[ANALYSIS:(.*?)\]\n([\s\S]*)$/
                       )
-                      if (analysisMatch && onAnalysis) {
+                      if (analysisMatch) {
                         const [, agent, analysis] = analysisMatch
-                        onAnalysis({
-                          agent: agent.trim(),
-                          analysis: analysis.trim(),
-                          timestamp: Date.now()
-                        })
+                        console.log(
+                          `[ANALYSIS] ${agent}: ${analysis.length} chars (filtered out from chat)`
+                        )
+                        if (onAnalysis) {
+                          onAnalysis({
+                            agent: agent.trim(),
+                            analysis: analysis.trim(),
+                            timestamp: Date.now()
+                          })
+                        }
                         // Don't add to main text - analyses only show in their tabs
                         continue
                       }
 
                       // Regular message
+                      console.log(
+                        `[CONTENT] Adding ${part.text.length} chars to response`
+                      )
                       fullText += part.text
                       if (onChunk) {
                         onChunk(part.text)

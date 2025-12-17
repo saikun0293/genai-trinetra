@@ -1,19 +1,13 @@
 import { useState, useRef, useEffect } from "react"
 import { Send, Loader2, Trash2, User, Bot } from "lucide-react"
-import {
-  agentService,
-  ThinkingMessage,
-  AnalysisMessage
-} from "@/services/agentService"
+import { agentService, ThinkingMessage } from "@/services/agentService"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { ThinkingMessages, ThinkingItem } from "@/components/ThinkingMessages"
 
 export interface ChatMessage {
   role: "user" | "assistant"
   content: string
   timestamp: Date
-  thinkingItems?: ThinkingItem[]
 }
 
 interface VerifyViewProps {
@@ -31,9 +25,7 @@ export function VerifyView({
   const [isLoading, setIsLoading] = useState(false)
   const [streamingText, setStreamingText] = useState("")
   const [statusMessageIndex, setStatusMessageIndex] = useState(0)
-  const [currentThinkingItems, setCurrentThinkingItems] = useState<
-    ThinkingItem[]
-  >([])
+  const [agentProgress, setAgentProgress] = useState<string[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -89,62 +81,35 @@ export function VerifyView({
     setInput("")
     setIsLoading(true)
     setStreamingText("")
-    setCurrentThinkingItems([])
-
-    // Track thinking items during the request
-    const thinkingItems: ThinkingItem[] = []
+    setAgentProgress([])
 
     try {
       const response = await agentService.sendMessage(
         userMessage.content,
         "app",
         (chunk) => {
+          // Only update streaming text if it's actual content
+          console.log("Received chunk:", chunk.substring(0, 100))
           setStreamingText((prev) => prev + chunk)
         },
-        (thinking: ThinkingMessage) => {
-          const newItem: ThinkingItem = {
-            agent: thinking.agent,
-            message: thinking.message,
-            timestamp: thinking.timestamp
-          }
-          thinkingItems.push(newItem)
-          setCurrentThinkingItems((prev) => [...prev, newItem])
-        },
-        (analysis: AnalysisMessage) => {
-          // Find the last item for this agent and add analysis to it
-          const lastIndex = thinkingItems.findIndex(
-            (item) => item.agent === analysis.agent
-          )
-          if (lastIndex !== -1) {
-            thinkingItems[lastIndex] = {
-              ...thinkingItems[lastIndex],
-              analysis: analysis.analysis
-            }
-          } else {
-            // If no thinking message exists, create a new item with analysis only
-            const newItem: ThinkingItem = {
-              agent: analysis.agent,
-              message: "",
-              analysis: analysis.analysis,
-              timestamp: analysis.timestamp
-            }
-            thinkingItems.push(newItem)
-          }
-
-          setCurrentThinkingItems([...thinkingItems])
-        }
+        undefined, // Don't track thinking messages
+        undefined // Don't handle analysis messages in chat - they're stored in BigQuery and accessed via detail view
       )
 
+      console.log("Analysis complete, response length:", response?.length || 0)
+
+      // Only include meaningful response
       const assistantMessage: ChatMessage = {
         role: "assistant",
-        content: response,
-        timestamp: new Date(),
-        thinkingItems: thinkingItems.length > 0 ? [...thinkingItems] : undefined
+        content:
+          response ||
+          "Analysis complete. View the transaction details to see the full analysis.",
+        timestamp: new Date()
       }
 
       setMessages((prev) => [...prev, assistantMessage])
       setStreamingText("")
-      setCurrentThinkingItems([])
+      setAgentProgress([])
 
       // Refresh transactions if analysis was completed successfully
       if (onAnalysisComplete && response && !response.includes("error")) {
@@ -171,7 +136,6 @@ export function VerifyView({
         timestamp: new Date()
       }
       setMessages((prev) => [...prev, errorMessage])
-      setCurrentThinkingItems([])
     } finally {
       setIsLoading(false)
     }
@@ -181,7 +145,6 @@ export function VerifyView({
     setMessages([])
     agentService.resetSession()
     setStreamingText("")
-    setCurrentThinkingItems([])
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -300,10 +263,6 @@ export function VerifyView({
               >
                 {message.role === "assistant" ? (
                   <>
-                    {message.thinkingItems &&
-                      message.thinkingItems.length > 0 && (
-                        <ThinkingMessages items={message.thinkingItems} />
-                      )}
                     <div className="markdown-analysis max-w-none">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {message.content}
@@ -335,48 +294,8 @@ export function VerifyView({
             </div>
           ))}
 
-          {/* Streaming message */}
-          {streamingText && (
-            <div className="flex gap-3 justify-start">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: "#E9EEF6" }}
-              >
-                <Bot className="w-5 h-5" style={{ color: "#3b82f6" }} />
-              </div>
-              <div
-                className="max-w-[80%] rounded-lg px-4 py-3"
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  color: "#000000",
-                  wordBreak: "break-word",
-                  overflowWrap: "anywhere",
-                  border: "1px solid #D0D5DD"
-                }}
-              >
-                {currentThinkingItems.length > 0 && (
-                  <ThinkingMessages items={currentThinkingItems} />
-                )}
-                <div className="markdown-analysis max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {streamingText}
-                  </ReactMarkdown>
-                </div>
-                <div className="flex items-center gap-1 mt-2">
-                  <Loader2
-                    className="w-3 h-3 animate-spin"
-                    style={{ color: "#3b82f6" }}
-                  />
-                  <p className="text-xs" style={{ color: "#3B4953" }}>
-                    Thinking...
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Loading status message */}
-          {isLoading && !streamingText && (
+          {/* Streaming/Loading message - show only one state */}
+          {isLoading && (
             <div className="flex gap-3 justify-start">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
@@ -392,21 +311,45 @@ export function VerifyView({
                   border: "1px solid #D0D5DD"
                 }}
               >
-                {currentThinkingItems.length > 0 && (
-                  <ThinkingMessages items={currentThinkingItems} />
+                {streamingText ? (
+                  <>
+                    <div className="markdown-analysis max-w-none mb-3">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {streamingText}
+                      </ReactMarkdown>
+                    </div>
+                    <div
+                      className="flex items-center gap-2 pt-2 border-t"
+                      style={{ borderColor: "#E9EEF6" }}
+                    >
+                      <Loader2
+                        className="w-3 h-3 animate-spin"
+                        style={{ color: "#3b82f6" }}
+                      />
+                      <p className="text-xs" style={{ color: "#3B4953" }}>
+                        Processing...
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Loader2
+                        className="w-4 h-4 animate-spin"
+                        style={{ color: "#3b82f6" }}
+                      />
+                      <p
+                        className="text-sm font-medium"
+                        style={{ color: "#3B4953" }}
+                      >
+                        {statusMessages[statusMessageIndex]}
+                      </p>
+                    </div>
+                    <p className="text-xs" style={{ color: "#6B7280" }}>
+                      Running compliance analysis agents...
+                    </p>
+                  </>
                 )}
-                <div className="flex items-center gap-2">
-                  <Loader2
-                    className="w-4 h-4 animate-spin"
-                    style={{ color: "#3b82f6" }}
-                  />
-                  <p
-                    className="text-sm font-medium"
-                    style={{ color: "#3B4953" }}
-                  >
-                    {statusMessages[statusMessageIndex]}
-                  </p>
-                </div>
               </div>
             </div>
           )}

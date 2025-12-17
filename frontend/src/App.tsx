@@ -794,7 +794,11 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex-1 ml-20">
         {activeView === "verify" ? (
-          <VerifyView messages={chatMessages} setMessages={setChatMessages} />
+          <VerifyView
+            messages={chatMessages}
+            setMessages={setChatMessages}
+            onAnalysisComplete={fetchTransactions}
+          />
         ) : (
           <div className="p-8 flex">
             <div

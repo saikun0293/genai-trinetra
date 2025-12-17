@@ -19,9 +19,14 @@ export interface ChatMessage {
 interface VerifyViewProps {
   messages: ChatMessage[]
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
+  onAnalysisComplete?: () => void
 }
 
-export function VerifyView({ messages, setMessages }: VerifyViewProps) {
+export function VerifyView({
+  messages,
+  setMessages,
+  onAnalysisComplete
+}: VerifyViewProps) {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [streamingText, setStreamingText] = useState("")
@@ -140,11 +145,29 @@ export function VerifyView({ messages, setMessages }: VerifyViewProps) {
       setMessages((prev) => [...prev, assistantMessage])
       setStreamingText("")
       setCurrentThinkingItems([])
+
+      // Refresh transactions if analysis was completed successfully
+      if (onAnalysisComplete && response && !response.includes("error")) {
+        setTimeout(() => {
+          onAnalysisComplete()
+        }, 1000) // Small delay to ensure backend has updated
+      }
     } catch (error) {
       console.error("Error sending message:", error)
+
+      // Check if it's a context variable error
+      let errorContent = "Sorry, I encountered an error. Please try again."
+      if (error instanceof Error) {
+        if (error.message.includes("Context variable not found")) {
+          errorContent = `⚠️ **Analysis Error**: One or more agents failed to complete their analysis.\n\nThis usually means the agents couldn't access required data. Please try again or contact support if the issue persists.\n\nError details: ${error.message}`
+        } else {
+          errorContent = `⚠️ **Error**: ${error.message}\n\nPlease try again.`
+        }
+      }
+
       const errorMessage: ChatMessage = {
         role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
+        content: errorContent,
         timestamp: new Date()
       }
       setMessages((prev) => [...prev, errorMessage])

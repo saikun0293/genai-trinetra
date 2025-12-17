@@ -102,6 +102,8 @@ class AgentService {
     const reader = response.body?.getReader()
     const decoder = new TextDecoder()
     let fullText = ""
+    let hasError = false
+    let errorDetails = ""
 
     if (reader) {
       try {
@@ -119,6 +121,13 @@ class AgentService {
                 if (jsonStr.trim() === "[DONE]") continue
 
                 const data: AgentResponse = JSON.parse(jsonStr)
+
+                // Check if this is an error response
+                if (data.type === "error" || (data as any).error) {
+                  hasError = true
+                  errorDetails = (data as any).error || JSON.stringify(data)
+                  throw new Error(errorDetails)
+                }
 
                 // Extract text from the response
                 if (data.content?.parts) {
@@ -161,6 +170,10 @@ class AgentService {
                   }
                 }
               } catch (e) {
+                // If it's our thrown error, re-throw it
+                if (hasError) {
+                  throw e
+                }
                 // Skip invalid JSON
                 console.debug("Skipping invalid JSON chunk:", e)
               }
@@ -170,6 +183,11 @@ class AgentService {
       } finally {
         reader.releaseLock()
       }
+    }
+
+    // Check if we got an error in the response
+    if (hasError) {
+      throw new Error(errorDetails)
     }
 
     return fullText
